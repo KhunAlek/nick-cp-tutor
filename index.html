@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nick — CP Tutor: Session Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EFEA;
+    --border: #DEDAD2;
+    --ink: #1A1815;
+    --text-body: #34302A;
+    --text-muted: #6E6A62;
+    --blue: #2B5FA3;
+    --blue-light: #EAF1FA;
+    --blue-border: #C3D6EE;
+    --green: #1A6B3C;
+    --green-light: #E9F6EE;
+    --green-border: #A9DABE;
+    --purple: #6B4E8E;
+    --purple-light: #F1ECF7;
+    --purple-border: #D6C7E8;
+    --red: #A3311E;
+    --red-light: #FBEEEA;
+    --red-border: #E9C1B4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-body); font-size: 16px; line-height: 1.7; }
+  .page { max-width: 760px; margin: 0 auto; padding: 48px 28px 100px; }
+  h1, h2, h3 { font-family: 'Libre Baskerville', serif; color: var(--ink); font-weight: 700; }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+  a { color: var(--blue); }
+
+  .doc-header { border-bottom: 3px solid var(--ink); padding-bottom: 24px; margin-bottom: 40px; }
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+  h1.doc-title { font-size: 2rem; line-height: 1.25; margin-bottom: 14px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-muted); }
+  .meta-row span strong { color: var(--ink); }
+
+  .section { margin-bottom: 44px; }
+  h2.section-title { font-size: 1.35rem; padding-bottom: 10px; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+  p { margin-bottom: 14px; }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); }
+
+  .box { border-radius: 8px; padding: 16px 20px; margin: 18px 0; font-size: 15px; }
+  .box-blue { background: var(--blue-light); border: 1px solid var(--blue-border); border-left: 4px solid var(--blue); }
+  .box-green { background: var(--green-light); border: 1px solid var(--green-border); border-left: 4px solid var(--green); }
+  .box-purple { background: var(--purple-light); border: 1px solid var(--purple-border); border-left: 4px solid var(--purple); }
+  .box-plain { background: var(--surface-alt); border: 1px solid var(--border); border-left: 4px solid var(--text-muted); }
+  .box-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .box-blue .box-label { color: var(--blue); }
+  .box-green .box-label { color: var(--green); }
+  .box-purple .box-label { color: var(--purple); }
+  .box-plain .box-label { color: var(--text-muted); }
+
+  .session-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); margin: 16px 0; }
+  .session-card { display: flex; gap: 0; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; transition: background 0.1s; }
+  .session-card:last-child { border-bottom: none; }
+  .session-card:hover { background: var(--surface-alt); }
+  .session-num { width: 70px; flex-shrink: 0; background: var(--surface-alt); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px; color: var(--text-muted); border-right: 1px solid var(--border); }
+  .session-num.status-live { color: var(--green); }
+  .session-num.status-new { color: var(--blue); }
+  .session-content { padding: 16px 20px; flex: 1; }
+  .session-title { font-size: 15.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; font-family: 'Libre Baskerville', serif; }
+  .session-desc { font-size: 13.5px; color: var(--text-muted); line-height: 1.55; margin-bottom: 6px; }
+  .session-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; }
+  .tag-live { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+  .tag-new { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
+  .tag-technique { background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--border); }
+  .session-arrow { display: flex; align-items: center; padding: 0 18px; color: var(--text-muted); font-size: 18px; }
+
+  .checklist { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+  .check-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
+  .check-box { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  .doc-footer { margin-top: 60px; padding-top: 18px; border-top: 3px solid var(--ink); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 18mm; }
+    body { background: #FFFFFF !important; color: #000000 !important; }
+    .page { max-width: 100%; padding: 0; }
+    * { color: #000000 !important; }
+    .box, .session-card, .check-item { background: #FFFFFF !important; border-color: #000000 !important; }
+    h1, h2, h3 { color: #000000 !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <div class="eyebrow">Stage 3 · Sorting and Searching · Session Index</div>
+    <h1 class="doc-title">Nick's CP Tutor — All Sessions</h1>
+    <div class="meta-row">
+      <span><strong>Language:</strong> Python, in Thonny</span>
+      <span><strong>Judge:</strong> cses.fi/problemset</span>
+      <span><strong>Live tutor:</strong> Check my code / Ask for help, powered by the deployed Worker</span>
+    </div>
+  </header>
+
+  <div class="section">
+    <h2 class="section-title">How this works</h2>
+    <p>Each session below is one self-contained page: the lesson, some diagrams, a wrong/right code comparison, hints you can open one at a time if you get stuck, and a live "Check my code" box that gives the same judgment your dad's evaluator would give — right away, without waiting.</p>
+    <div class="box box-plain">
+      <div class="box-label">If you're not sure where to start</div>
+      <p>Go in order. Each session assumes you've done the ones before it. If you've already done Sum of Two Values, start at Session 10.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Two-pointer run (complete)</h2>
+    <p>Three sessions establishing the two-pointer technique — sort a list, then walk it with two markers instead of checking every pair.</p>
+    <div class="session-list">
+      <a class="session-card" href="lesson_session9_sum_of_two_values.html">
+        <div class="session-num status-live">S9</div>
+        <div class="session-content">
+          <div class="session-title">Sum of Two Values</div>
+          <div class="session-desc">Two pointers, closing inward — plus the trap of sorting away the original positions, fixed by pairing (value, position) before you sort.</div>
+          <div class="session-tags"><span class="tag tag-live">Live</span><span class="tag tag-technique">two pointers · opposite ends</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Greedy interval scheduling run (new this week)</h2>
+    <p>Three sessions on a brand new technique: sort by the right key, then scan through once making a simple greedy decision at each step.</p>
+    <div class="session-list">
+      <a class="session-card" href="lesson_session10_movie_festival.html">
+        <div class="session-num status-new">S10</div>
+        <div class="session-content">
+          <div class="session-title">Movie Festival</div>
+          <div class="session-desc">First exposure to greedy interval scheduling. Sort by END time, not start time — the single biggest insight in this whole run.</div>
+          <div class="session-tags"><span class="tag tag-new">New</span><span class="tag tag-technique">greedy · sort by end time</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+      <a class="session-card" href="lesson_session11_movie_festival_ii.html">
+        <div class="session-num status-new">S11</div>
+        <div class="session-content">
+          <div class="session-title">Movie Festival II</div>
+          <div class="session-desc">Same greedy idea, extended to k screens at once. First use of <code>heapq</code> — always knowing which screen frees up soonest.</div>
+          <div class="session-tags"><span class="tag tag-new">New</span><span class="tag tag-technique">greedy · heapq</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+      <a class="session-card" href="lesson_session12_restaurant_customers.html">
+        <div class="session-num status-new">S12</div>
+        <div class="session-content">
+          <div class="session-title">Restaurant Customers</div>
+          <div class="session-desc">Same sort-and-scan family, applied to counting overlap instead of picking items. Two separately-sorted lists, walked with two pointers.</div>
+          <div class="session-tags"><span class="tag tag-new">New</span><span class="tag tag-technique">events · two pointers</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">What's next</h2>
+    <div class="box box-blue">
+      <div class="box-label">After this run</div>
+      <p>Maximum Subarray Sum (Kadane's algorithm) and Concert Tickets (looking up and removing values from a sorted collection) are good candidates for the next pack — different techniques, picked up once this one feels solid rather than crammed in alongside it.</p>
+    </div>
+  </div>
+
+  <footer class="doc-footer">
+    <span>Nick Bystrov — Stage 3 Session Index</span>
+    <span>Sorting and Searching, CSES</span>
+    <span>Debugging Toolkit applies on every session</span>
+  </footer>
+
+</div>
+</body>
+</html>
