@@ -64,8 +64,8 @@
   .check-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
   .check-box { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
 
-  .code-compare { display: flex; gap: 14px; margin: 18px 0; flex-wrap: wrap; }
-  .code-block { flex: 1; min-width: 260px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .code-compare { display: flex; gap: 14px; margin: 18px 0; flex-wrap: wrap; flex-direction: column; }
+  .code-block { flex: 1 1 100%; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
   .code-header { padding: 8px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
   .code-wrong .code-header { background: var(--red-light); color: var(--red); border-bottom: 1px solid var(--red-border); }
   .code-right .code-header { background: var(--green-light); color: var(--green); border-bottom: 1px solid var(--green-border); }
@@ -225,20 +225,17 @@ for i in range(n):
 
 pairs.sort()   # sorts by value, position rides along
 
-left = 0
-right = n - 1
-while left &lt; right:
-    total = pairs[left][0] + pairs[right][0]
-    if total == x:
-        print(pairs[left][1], pairs[right][1])   # ORIGINAL positions
-        break
-    elif total &lt; x:
-        left += 1
-    else:
-        right -= 1
-else:
-    print("IMPOSSIBLE")</div>
+# ...then the same two-pointer walk you already wrote for Ferris Wheel —
+# left = 0, right = n - 1, closing inward — except now you compare
+# pairs[left][0] + pairs[right][0] to x, and when you print your
+# answer, print pairs[left][1] and pairs[right][1], not left/right
+# themselves. Write that part yourself — you've already done it once.</div>
       </div>
+    </div>
+
+    <div class="box box-plain">
+      <div class="box-label">Why this stops short on purpose</div>
+      <p>That's not the whole solution, and that's deliberate — you already know how to write the two-pointer walk from Ferris Wheel. The new part is everything above the comment. Paste this block on its own and run it: it won't crash, but it won't print anything either — that silence is your signal the two-pointer part still needs to be written.</p>
     </div>
 
     <div class="diagram-wrap">
@@ -388,7 +385,7 @@ const PROBLEM_CONTEXT = {
 // through the real Worker instead, which is what makes this work once
 // deployed for real, unattended, on a weekday.
 // ---------------------------------------------------------------------
-const WORKER_BASE_URL = "https://nick-cp-tutor.abystrov66.workers.dev";
+const WORKER_BASE_URL = "REPLACE_WITH_YOUR_WORKER_URL";
 const IS_TEST_MODE = WORKER_BASE_URL === "REPLACE_WITH_YOUR_WORKER_URL";
 
 // Test-mode-only: identical prompts/schemas to worker/index.js, used to
@@ -492,6 +489,29 @@ HOW TO HINT
   pre-empt what he might ask next.
 - Prefer a pointed question over a statement - a question sends him
   back to his own code with new eyes; a statement resolves it for him.
+- The FIRST sentence of reply_to_nick must be a question. Not a
+  question after an observation - the very first words. If you catch
+  yourself about to write "X is empty / X needs to do Y / remember Z"
+  before the question mark, that entire clause is the thing to delete,
+  not keep. Everything you'd have explained belongs inside the question
+  itself, or not at all.
+  Wrong shape (do not do this): "Your \`pairs\` loop is empty - it needs
+  to build value/position pairs, remembering positions are 1-indexed.
+  What line should you add?" - by the time the question arrives there
+  is nothing left for him to figure out.
+  Right shape: "What does your \`pairs\` loop actually do right now, if
+  anything?" - one question, nothing explained first, nothing given
+  away. Let his answer tell you how much he already sees, then react to
+  that in the NEXT turn rather than pre-empting it in this one.
+- A yes/no question that names the specific missing technique is just
+  as much of a giveaway as a statement, even though it's grammatically
+  a question. "Did you sort the \`pairs\` list?" tells him exactly what
+  to add — there's nothing left to work out, only a fact to confirm.
+  Ask about a piece of STATE or BEHAVIOR he can go check instead of
+  naming the technique: not "did you sort it?" but "what does your
+  \`pairs\` list actually look like right when the while loop starts —
+  is it in the same order you built it in, or could it have changed?"
+  He should still have to connect what he observes to the fix himself.
 - If this is a genuinely new concept he hasn't seen before (not just a
   bug in something he's already learned), teach it with a short
   wrong/right code pair - a few lines of code that gets it wrong, a few
@@ -544,35 +564,67 @@ const HELP_TOOL = {
 };
 
 // ---------------------------------------------------------------------
-// State — client-side only (localStorage), per the decided architecture.
-// One key holds everything for this problem, per the storage guidance
-// of combining data updated together into a single key.
+// State. Two different environments need two different mechanisms:
+//   - Inside a Claude artifact preview, browser localStorage is blocked
+//     entirely — Claude artifacts use window.storage instead.
+//   - Once actually deployed on GitHub Pages, window.storage won't exist
+//     (it's a Claude.ai artifact-platform feature, not a web standard),
+//     but real localStorage works fine there — which is the architecture
+//     Section 3 actually specifies for the deployed site.
+// Feature-detect which one is available and use that, with real error
+// handling throughout (a previous version had none on save, which meant
+// a blocked write threw silently and killed every button click before
+// anything else in the handler ran).
 // ---------------------------------------------------------------------
 const STATE_KEY = "nick_cp_tutor:" + PROBLEM_CONTEXT.problem_id;
+const DEFAULT_STATE = { currentCode: "", lastVerdict: null, attemptCount: 0, helpConversation: [], hintsGiven: 0 };
 
-function loadState() {
+function hasArtifactStorage() {
+  return typeof window !== "undefined" && !!window.storage && typeof window.storage.get === "function";
+}
+
+async function loadState() {
   try {
-    const raw = localStorage.getItem(STATE_KEY);
-    if (!raw) throw new Error("no state yet");
-    return JSON.parse(raw);
+    if (hasArtifactStorage()) {
+      const result = await window.storage.get(STATE_KEY, false);
+      return JSON.parse(result.value);
+    } else {
+      const raw = localStorage.getItem(STATE_KEY);
+      if (!raw) return Object.assign({}, DEFAULT_STATE);
+      return JSON.parse(raw);
+    }
   } catch (e) {
-    return { currentCode: "", lastVerdict: null, attemptCount: 0, helpConversation: [], hintsGiven: 0 };
+    return Object.assign({}, DEFAULT_STATE);
   }
 }
 
-function saveState(state) {
-  localStorage.setItem(STATE_KEY, JSON.stringify(state));
+async function saveState(state) {
+  try {
+    if (hasArtifactStorage()) {
+      await window.storage.set(STATE_KEY, JSON.stringify(state), false);
+    } else {
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    }
+  } catch (e) {
+    console.error("Couldn't save state (continuing anyway):", e);
+  }
 }
 
-let state = loadState();
+let state = Object.assign({}, DEFAULT_STATE);
 
 // ---------------------------------------------------------------------
 // Anthropic call helpers — retry once if the tool isn't invoked, then
 // surface a clear error rather than guessing at malformed output.
+// Same evaluate/help model split as worker/index.js — see that file for
+// why: /evaluate is a mechanical classification task Haiku handles well,
+// /help needs a stronger model for the subtler "how much to reveal" call.
 // ---------------------------------------------------------------------
-async function callAnthropicDirect(systemPrompt, tool, envelope) {
+const MODEL_EVALUATE_TEST_MODE = "claude-haiku-4-5-20251001";
+const MODEL_HELP_TEST_MODE = "claude-sonnet-5";
+
+async function callAnthropicDirect(model, systemPrompt, tool, envelope) {
   const body = {
-    model: "claude-haiku-4-5-20251001",
+    model: model,
     max_tokens: 1000,
     system: systemPrompt,
     messages: [{ role: "user", content: JSON.stringify(envelope, null, 2) }],
@@ -613,16 +665,59 @@ async function callWorker(path, envelope) {
   return data;
 }
 
+// Same safeguards as worker/index.js — kept in sync so TEST MODE previews
+// behave the same as the deployed Worker. See that file for the reasoning
+// and the failures these caught during testing.
+function opensWithQuestion(text) {
+  if (!text) return false;
+  const trimmed = text.trim();
+  const qIndex = trimmed.indexOf("?");
+  if (qIndex === -1) return false;
+  const before = trimmed.slice(0, qIndex);
+  return !/[.!]\s/.test(before);
+}
+
+function repairMessageActuallyTeaches(verdict) {
+  if (verdict.verdict !== "REPAIR") return false;
+  const msg = (verdict.child_message || "").trim();
+  return msg.includes("?") || msg.length > 220;
+}
+
+function isLeadingYesNoQuestion(text) {
+  if (!text) return false;
+  const trimmed = text.trim();
+  const qIndex = trimmed.indexOf("?");
+  if (qIndex === -1) return false;
+  const before = trimmed.slice(0, qIndex);
+  return /\b(did|do|does|have|has|is|are|was|were)\s+you\b/i.test(before);
+}
+
 async function callEvaluate(envelope) {
-  return IS_TEST_MODE
-    ? callAnthropicDirect(EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, envelope)
-    : callWorker("/evaluate", envelope);
+  if (!IS_TEST_MODE) return callWorker("/evaluate", envelope);
+
+  let verdict = await callAnthropicDirect(MODEL_EVALUATE_TEST_MODE, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, envelope);
+  if (repairMessageActuallyTeaches(verdict)) {
+    const retryEnvelope = Object.assign({}, envelope, {
+      tutor_self_correction_note:
+        "Your previous child_message for this REPAIR verdict diagnosed the problem and/or asked a question — that teaches, which REPAIR must not do. Rewrite child_message as ONE short, reassuring sentence only: a fresh lesson is coming tomorrow, being stuck here is normal, nothing to fix tonight. No diagnosis, no question."
+    });
+    verdict = await callAnthropicDirect(MODEL_EVALUATE_TEST_MODE, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, retryEnvelope);
+  }
+  return verdict;
 }
 
 async function callHelp(envelope) {
-  return IS_TEST_MODE
-    ? callAnthropicDirect(HELP_SYSTEM_PROMPT, HELP_TOOL, envelope)
-    : callWorker("/help", envelope);
+  if (!IS_TEST_MODE) return callWorker("/help", envelope);
+
+  let reply = await callAnthropicDirect(MODEL_HELP_TEST_MODE, HELP_SYSTEM_PROMPT, HELP_TOOL, envelope);
+  if (!opensWithQuestion(reply.reply_to_nick) || isLeadingYesNoQuestion(reply.reply_to_nick)) {
+    const retryEnvelope = Object.assign({}, envelope, {
+      tutor_self_correction_note:
+        "Your previous attempt either explained the situation before asking anything, or asked a yes/no question that names the specific missing technique directly (like 'did you sort the list?') — both give too much away. Rewrite reply_to_nick as ONE open question about what the code currently does or what a specific piece of state looks like, with no explanation first and no naming the fix. See the WRONG SHAPE / RIGHT SHAPE examples in your instructions."
+    });
+    reply = await callAnthropicDirect(MODEL_HELP_TEST_MODE, HELP_SYSTEM_PROMPT, HELP_TOOL, retryEnvelope);
+  }
+  return reply;
 }
 
 function escapeHtml(str) {
@@ -687,7 +782,7 @@ async function handleCheckCode() {
   }
 
   state.currentCode = code;
-  saveState(state);
+  await saveState(state);
 
   btn.disabled = true;
   document.getElementById('evaluateResult').innerHTML = '<div class="loading-text">Checking your code…</div>';
@@ -701,7 +796,7 @@ async function handleCheckCode() {
     const verdict = await callEvaluate(envelope);
     state.attemptCount += 1;
     state.lastVerdict = verdict;
-    saveState(state);
+    await saveState(state);
     renderEvaluateResult(verdict);
     renderAttemptCount();
   } catch (err) {
@@ -740,7 +835,7 @@ async function handleAskForHelp() {
     const reply = await callHelp(envelope);
     state.helpConversation.push({ speaker: 'tutor', message: reply.reply_to_nick });
     state.hintsGiven += 1;
-    saveState(state);
+    await saveState(state);
     renderChat();
     document.getElementById('helpStatus').innerHTML = reply.needs_escalation
       ? '<div class="escalation-banner">This one has been flagged for your dad\'s next check-in — no need to keep going back and forth on it here.</div>'
@@ -755,7 +850,8 @@ async function handleAskForHelp() {
 // ---------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------
-function init() {
+async function init() {
+  state = await loadState();
   renderModeBanner();
   document.getElementById('codeInput').value = state.currentCode || '';
   renderAttemptCount();
@@ -769,7 +865,7 @@ function init() {
   });
   document.getElementById('codeInput').addEventListener('change', () => {
     state.currentCode = document.getElementById('codeInput').value;
-    saveState(state);
+    saveState(state); // best-effort background save, not blocking the UI
   });
 }
 
