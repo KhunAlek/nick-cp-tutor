@@ -1,0 +1,9 @@
+name = "nick-cp-tutor"
+main = "index.js"
+compatibility_date = "2026-07-01"
+
+# ANTHROPIC_API_KEY is a secret, not a var — never put it in this file.
+# It's pushed automatically by the GitHub Actions deploy workflow
+# (see ../.github/workflows/deploy.yml and ../SETUP.md), reading from
+# the ANTHROPIC_API_KEY repository secret. No wrangler CLI on Alex's
+# laptop needed.

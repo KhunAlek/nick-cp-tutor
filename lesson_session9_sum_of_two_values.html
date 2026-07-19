@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nick — Stage 3 Session 9: Sum of Two Values (Position-Pairing + Two Pointers)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EFEA;
+    --border: #DEDAD2;
+    --ink: #1A1815;
+    --text-body: #34302A;
+    --text-muted: #6E6A62;
+    --blue: #2B5FA3;
+    --blue-light: #EAF1FA;
+    --blue-border: #C3D6EE;
+    --green: #1A6B3C;
+    --green-light: #E9F6EE;
+    --green-border: #A9DABE;
+    --purple: #6B4E8E;
+    --purple-light: #F1ECF7;
+    --purple-border: #D6C7E8;
+    --red: #A3311E;
+    --red-light: #FBEEEA;
+    --red-border: #E9C1B4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-body); font-size: 16px; line-height: 1.7; }
+  .page { max-width: 760px; margin: 0 auto; padding: 48px 28px 100px; }
+  h1, h2, h3 { font-family: 'Libre Baskerville', serif; color: var(--ink); font-weight: 700; }
+  code, .mono { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+  .doc-header { border-bottom: 3px solid var(--ink); padding-bottom: 24px; margin-bottom: 40px; }
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+  h1.doc-title { font-size: 2rem; line-height: 1.25; margin-bottom: 14px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-muted); }
+  .meta-row span strong { color: var(--ink); }
+
+  .section { margin-bottom: 44px; }
+  h2.section-title { font-size: 1.35rem; padding-bottom: 10px; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+  p { margin-bottom: 14px; }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); }
+
+  .box { border-radius: 8px; padding: 16px 20px; margin: 18px 0; font-size: 15px; }
+  .box-blue { background: var(--blue-light); border: 1px solid var(--blue-border); border-left: 4px solid var(--blue); }
+  .box-green { background: var(--green-light); border: 1px solid var(--green-border); border-left: 4px solid var(--green); }
+  .box-purple { background: var(--purple-light); border: 1px solid var(--purple-border); border-left: 4px solid var(--purple); }
+  .box-plain { background: var(--surface-alt); border: 1px solid var(--border); border-left: 4px solid var(--text-muted); }
+  .box-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .box-blue .box-label { color: var(--blue); }
+  .box-green .box-label { color: var(--green); }
+  .box-purple .box-label { color: var(--purple); }
+  .box-plain .box-label { color: var(--text-muted); }
+
+  .diagram-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+  .diagram-caption { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+
+  .checklist { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+  .check-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
+  .check-box { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
+
+  .code-compare { display: flex; gap: 14px; margin: 18px 0; flex-wrap: wrap; }
+  .code-block { flex: 1; min-width: 260px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .code-header { padding: 8px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .code-wrong .code-header { background: var(--red-light); color: var(--red); border-bottom: 1px solid var(--red-border); }
+  .code-right .code-header { background: var(--green-light); color: var(--green); border-bottom: 1px solid var(--green-border); }
+  .code-body { background: #22201C; color: #F1EFEA; padding: 14px 16px; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  .doc-footer { margin-top: 60px; padding-top: 18px; border-top: 3px solid var(--ink); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  /* --- interactive additions (Step 3) --- */
+  .mode-banner { font-size: 12.5px; font-weight: 600; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; }
+  .mode-test { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
+  .mode-live { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 16px 0; }
+  .panel label { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .panel textarea { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #22201C; color: #F1EFEA; border: none; border-radius: 6px; padding: 12px 14px; resize: vertical; margin-bottom: 14px; }
+  .panel select, .panel input[type=text] { width: 100%; font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 5px; margin-bottom: 14px; background: var(--surface); color: var(--text-body); }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+  .row > div { flex: 1; min-width: 180px; }
+
+  button.action-btn { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 14px; background: var(--ink); color: #FFF; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+  button.action-btn:hover { background: #000; }
+  button.action-btn:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+  .attempt-count { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+
+  .result-card { margin-top: 16px; padding: 14px 16px; border-radius: 6px; border: 1px solid var(--border); }
+  .result-PASS { background: var(--green-light); border-color: var(--green-border); }
+  .result-SMALL_CORRECTION { background: var(--blue-light); border-color: var(--blue-border); }
+  .result-REPAIR { background: var(--red-light); border-color: var(--red-border); }
+  .result-pill { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; margin-bottom: 8px; background: rgba(0,0,0,0.06); }
+  .result-message { font-size: 14.5px; }
+  .scaling-note { margin-top: 10px; font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+  .chat-log { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; max-height: 340px; overflow-y: auto; }
+  .chat-bubble { padding: 10px 14px; border-radius: 8px; font-size: 14px; max-width: 88%; }
+  .chat-nick { align-self: flex-end; background: var(--surface-alt); border: 1px solid var(--border); }
+  .chat-tutor { align-self: flex-start; background: var(--blue-light); border: 1px solid var(--blue-border); }
+  .chat-empty { font-size: 13px; color: var(--text-muted); font-style: italic; }
+  .escalation-banner { background: var(--red-light); border: 1px solid var(--red-border); color: var(--red); font-size: 13px; padding: 10px 14px; border-radius: 6px; margin-top: 10px; }
+
+  .loading-text { font-size: 13px; color: var(--text-muted); font-style: italic; margin-top: 10px; }
+  .error-text { font-size: 13px; color: var(--red); background: var(--red-light); border: 1px solid var(--red-border); border-radius: 6px; padding: 10px 12px; margin-top: 10px; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 18mm; }
+    body { background: #FFFFFF !important; color: #000000 !important; }
+    .page { max-width: 100%; padding: 0; }
+    * { color: #000000 !important; }
+    .box, .diagram-wrap, .check-item, .panel, .result-card, .chat-bubble { background: #FFFFFF !important; border-color: #000000 !important; }
+    .code-body { background: #FFFFFF !important; color: #000000 !important; border: 1px solid #000000; }
+    h1, h2, h3 { color: #000000 !important; }
+    .panel, .mode-banner { display: none; } /* interactive widgets don't belong on a printed page */
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <div class="eyebrow">Stage 3 · Session 9 · Sorting and Searching</div>
+    <h1 class="doc-title">Sum of Two Values — Pairing Positions Before You Sort</h1>
+    <div class="meta-row">
+      <span><strong>Last time:</strong> Ferris Wheel — two pointers starting from opposite ends</span>
+      <span><strong>Today:</strong> the same two-pointer trick, plus a fix for a trap it hides</span>
+    </div>
+  </header>
+
+  <div class="section">
+    <h2 class="section-title">The problem in plain words</h2>
+    <div class="box box-purple">
+      <div class="box-label">The problem in plain words</div>
+      <p>You get a list of numbers and a target number <code>x</code>. Find two numbers in the list — at two different spots — that add up to exactly <code>x</code>. Print which two spots they were at (position 1, 2, 3...), not the numbers themselves. If no two numbers work, print <code>IMPOSSIBLE</code>.</p>
+    </div>
+    <p>This sounds almost identical to Ferris Wheel — sort, then close in from both ends. It mostly is. But there's one new trap, and it's the whole point of today's session.</p>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">The trap: sorting throws away the positions</h2>
+    <p>In Ferris Wheel, you only ever needed to count gondolas — you never had to say <em>which kid</em> was which afterward. Today you do. The problem wants the <strong>original</strong> positions, from before you sorted anything. And <code>list.sort()</code> doesn't care about that at all — it just rearranges the numbers and moves on.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 480 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="240" y="18" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Sort the plain values, and the position is gone</text>
+
+        <text x="10" y="42" font-family="DM Sans" font-size="11" font-weight="700" fill="#6E6A62">BEFORE — original array, positions 1 to 4</text>
+        <g font-family="JetBrains Mono" font-size="14" font-weight="700">
+          <rect x="10" y="50" width="46" height="34" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/><text x="33" y="72" text-anchor="middle" fill="#2B5FA3">2</text>
+          <rect x="62" y="50" width="46" height="34" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/><text x="85" y="72" text-anchor="middle" fill="#2B5FA3">7</text>
+          <rect x="114" y="50" width="46" height="34" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/><text x="137" y="72" text-anchor="middle" fill="#2B5FA3">5</text>
+          <rect x="166" y="50" width="46" height="34" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/><text x="189" y="72" text-anchor="middle" fill="#2B5FA3">1</text>
+        </g>
+        <g font-family="DM Sans" font-size="10" fill="#6E6A62">
+          <text x="33" y="96" text-anchor="middle">pos 1</text>
+          <text x="85" y="96" text-anchor="middle">pos 2</text>
+          <text x="137" y="96" text-anchor="middle">pos 3</text>
+          <text x="189" y="96" text-anchor="middle">pos 4</text>
+        </g>
+
+        <text x="240" y="122" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#34302A">values.sort() ↓</text>
+
+        <text x="10" y="150" font-family="DM Sans" font-size="11" font-weight="700" fill="#A3311E">AFTER — sorted by value, positions lost</text>
+        <g font-family="JetBrains Mono" font-size="14" font-weight="700">
+          <rect x="10" y="158" width="46" height="34" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/><text x="33" y="180" text-anchor="middle" fill="#A3311E">1</text>
+          <rect x="62" y="158" width="46" height="34" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/><text x="85" y="180" text-anchor="middle" fill="#A3311E">2</text>
+          <rect x="114" y="158" width="46" height="34" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/><text x="137" y="180" text-anchor="middle" fill="#A3311E">5</text>
+          <rect x="166" y="158" width="46" height="34" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/><text x="189" y="180" text-anchor="middle" fill="#A3311E">7</text>
+        </g>
+        <g font-family="DM Sans" font-size="10" fill="#A3311E">
+          <text x="33" y="204" text-anchor="middle">pos ?</text>
+          <text x="85" y="204" text-anchor="middle">pos ?</text>
+          <text x="137" y="204" text-anchor="middle">pos ?</text>
+          <text x="189" y="204" text-anchor="middle">pos ?</text>
+        </g>
+        <text x="280" y="180" font-family="DM Sans" font-size="11" fill="#34302A">The 7 that was at position 2 —</text>
+        <text x="280" y="198" font-family="DM Sans" font-size="11" fill="#34302A">nothing here remembers that anymore.</text>
+      </svg>
+      <div class="diagram-caption">Once you sort a plain list of values, there's no way back to "which original spot was this."</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">The fix: tag each value with its position before you sort</h2>
+    <p>Instead of sorting a list of plain numbers, build a list of <strong>(value, position)</strong> pairs first — then sort that. Python sorts tuples by their first item by default, so sorting a list of <code>(value, position)</code> pairs sorts by value, exactly like before, except now the position rides along for the trip.</p>
+
+    <div class="code-compare">
+      <div class="code-block code-wrong">
+        <div class="code-header">Wrong — sorts the values, loses the positions</div>
+        <div class="code-body">n, x = map(int, input().split())
+values = list(map(int, input().split()))
+
+values.sort()
+
+left = 0
+right = n - 1
+while left &lt; right:
+    total = values[left] + values[right]
+    if total == x:
+        print(left + 1, right + 1)   # these are SORTED positions,
+        break                          # not the original ones!
+    elif total &lt; x:
+        left += 1
+    else:
+        right -= 1
+else:
+    print("IMPOSSIBLE")</div>
+      </div>
+      <div class="code-block code-right">
+        <div class="code-header">Right — pair with position first, sort the pairs</div>
+        <div class="code-body">n, x = map(int, input().split())
+values = list(map(int, input().split()))
+
+pairs = []
+for i in range(n):
+    pairs.append((values[i], i + 1))   # (value, original 1-indexed position)
+
+pairs.sort()   # sorts by value, position rides along
+
+left = 0
+right = n - 1
+while left &lt; right:
+    total = pairs[left][0] + pairs[right][0]
+    if total == x:
+        print(pairs[left][1], pairs[right][1])   # ORIGINAL positions
+        break
+    elif total &lt; x:
+        left += 1
+    else:
+        right -= 1
+else:
+    print("IMPOSSIBLE")</div>
+      </div>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 480 130" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="240" y="16" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Pair first, then sort — the position tag travels with the value</text>
+        <text x="10" y="44" font-family="JetBrains Mono" font-size="12" fill="#34302A">before sort: (2,1) (7,2) (5,3) (1,4)</text>
+        <text x="240" y="44" font-family="DM Sans" font-size="12" fill="#6E6A62">sort by value →</text>
+        <text x="10" y="76" font-family="JetBrains Mono" font-size="12" fill="#1A6B3C">after sort:  (1,4) (2,1) (5,3) (7,2)</text>
+        <text x="10" y="104" font-family="DM Sans" font-size="11" fill="#34302A">Value 1 still knows it came from position 4. Value 7 still knows it came from position 2.</text>
+      </svg>
+      <div class="diagram-caption">Same sort, same order of values — but every value still carries the position it started at.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Walking the real CSES sample</h2>
+    <p>Array <code>2 7 5 1</code>, target <code>x = 8</code>. Same two-pointer idea as Ferris Wheel — pointers start at opposite ends of the sorted pairs and close in — except now you're checking sums against <code>x</code> instead of counting gondolas.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 480 175" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="240" y="16" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Sorted pairs: (1,4) (2,1) (5,3) (7,2) — x = 8</text>
+
+        <g font-family="JetBrains Mono" font-size="14" font-weight="700">
+          <rect x="20" y="30" width="60" height="34" rx="6" fill="#E9F6EE" stroke="#A9DABE"/><text x="50" y="52" text-anchor="middle" fill="#1A6B3C">1,4</text>
+          <rect x="86" y="30" width="60" height="34" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/><text x="116" y="52" text-anchor="middle" fill="#2B5FA3">2,1</text>
+          <rect x="152" y="30" width="60" height="34" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/><text x="182" y="52" text-anchor="middle" fill="#2B5FA3">5,3</text>
+          <rect x="218" y="30" width="60" height="34" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/><text x="248" y="52" text-anchor="middle" fill="#A3311E">7,2</text>
+        </g>
+        <text x="50" y="80" text-anchor="middle" font-family="DM Sans" font-size="11" font-weight="700" fill="#1A6B3C">left</text>
+        <text x="248" y="80" text-anchor="middle" font-family="DM Sans" font-size="11" font-weight="700" fill="#A3311E">right</text>
+
+        <text x="320" y="42" font-family="JetBrains Mono" font-size="13" fill="#34302A">1 + 7 = 8</text>
+        <text x="320" y="60" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A6B3C">= x, match on step one!</text>
+
+        <text x="240" y="112" text-anchor="middle" font-family="DM Sans" font-size="13" font-weight="700" fill="#1A1815">print positions 4 and 2</text>
+        <text x="240" y="134" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6E6A62">CSES's own sample prints "2 4" instead — that's fine.</text>
+        <text x="240" y="152" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6E6A62">The problem says any valid pair of positions is accepted, in any order.</text>
+      </svg>
+      <div class="diagram-caption">Values 7 (position 2) and 1 (position 4) sum to 8. Either order you print them in is correct.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Your task</h2>
+    <div class="box box-blue">
+      <div class="box-label">Suggested target</div>
+      <p>Try <strong>Sum of Two Values</strong>, right after Ferris Wheel in Sorting and Searching. A different pick is fine too — just note in your comment whether it needs position-pairing or something else.</p>
+    </div>
+    <div class="checklist">
+      <div class="check-item"><div class="check-box"></div><div>Open CSES Sorting and Searching, open Sum of Two Values (or your own pick)</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Write one sentence as a comment at the top describing what the problem is asking, in your own words</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Build a list of <code>(value, position)</code> pairs before sorting — don't sort the plain values alone</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Two pointers, opposite ends, closing inward — same shape as Ferris Wheel</div></div>
+      <div class="check-item"><div class="check-box"></div><div>When you print your answer, make sure it's the position from the pair, not the pair's spot in the sorted list</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Test it against the sample, submit it, then check your code below</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Check your code</h2>
+    <p>Paste your code below and check it here first — same judgment your dad's evaluator would give, right away.</p>
+
+    <div id="modeBanner" class="mode-banner mode-test">Loading…</div>
+
+    <div class="panel">
+      <label for="codeInput">Your code</label>
+      <textarea id="codeInput" rows="12" spellcheck="false" placeholder="Paste your Python code here…"></textarea>
+
+      <div class="row">
+        <div>
+          <label for="csesVerdictInput">What did CSES say? (optional)</label>
+          <select id="csesVerdictInput">
+            <option value="">Haven't submitted yet</option>
+            <option value="ACCEPTED">ACCEPTED</option>
+            <option value="WRONG ANSWER">WRONG ANSWER</option>
+            <option value="TIME LIMIT EXCEEDED">TIME LIMIT EXCEEDED</option>
+            <option value="RUNTIME ERROR">RUNTIME ERROR</option>
+            <option value="COMPILE ERROR">COMPILE ERROR</option>
+          </select>
+        </div>
+        <div>
+          <button class="action-btn" id="checkBtn">Check my code</button>
+        </div>
+      </div>
+
+      <div class="attempt-count" id="attemptCount"></div>
+      <div id="evaluateResult"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">If you get stuck</h2>
+    <p>Same toolkit as always. Guess first, read the error or the failed test carefully, try one fix, print a variable if you're unsure what it holds, search if you need to — and if you're still stuck, ask here.</p>
+    <div class="box box-plain">
+      <div class="box-label">A trick just for this one</div>
+      <p>If your two positions look wrong, print your <code>pairs</code> list right after building it, before you sort. Each entry should look like <code>(value, position)</code>. If it's just plain numbers with no position attached, that's the bug.</p>
+    </div>
+
+    <div class="panel">
+      <label for="chatLog">Conversation</label>
+      <div class="chat-log" id="chatLog"></div>
+
+      <label for="nickMessageInput">What's going on?</label>
+      <input type="text" id="nickMessageInput" placeholder="e.g. it says WRONG ANSWER on test 5 and I don't see why">
+      <button class="action-btn" id="askBtn">Ask for help</button>
+      <div id="helpStatus"></div>
+    </div>
+  </div>
+
+  <footer class="doc-footer">
+    <span>Nick Bystrov — Stage 3 · Session 9</span>
+    <span>Suggested: Sum of Two Values (Sorting and Searching)</span>
+    <span>Debugging Toolkit applies here</span>
+  </footer>
+
+</div>
+
+<script>
+// ---------------------------------------------------------------------
+// Shared problem context — sent with every /evaluate and /help call.
+// ---------------------------------------------------------------------
+const PROBLEM_CONTEXT = {
+  problem_id: "cses-1640",
+  problem_title: "Sum of Two Values",
+  intended_method: "sort (value, position) pairs, two pointers from opposite ends",
+  accept_criteria: [
+    "reads n and x, then the array",
+    "finds two DIFFERENT positions whose values sum to x",
+    "prints the two ORIGINAL 1-indexed positions, or IMPOSSIBLE",
+    "runs within time limits at n = 2e5 (no O(n^2) scan)"
+  ],
+  taught_recently: ["two-pointer opposite-ends", "value/position pairing before sort"],
+  learner_context: [
+    "11 years old, works alone, Python in Thonny",
+    "current gap: reading indentation under pressure",
+    "just learned: pairing values with original index before sorting"
+  ]
+};
+
+// ---------------------------------------------------------------------
+// Deployment switch. Fill WORKER_BASE_URL in once the Cloudflare Worker
+// is deployed (see ../SETUP.md) — e.g. "https://nick-cp-tutor.alex123.workers.dev".
+// Until then, this file runs in TEST MODE: it calls Claude directly
+// through this artifact's own API bridge, which only works while this
+// file is open inside a Claude conversation — NOT once it's hosted on
+// GitHub Pages. Once WORKER_BASE_URL is filled in, every request routes
+// through the real Worker instead, which is what makes this work once
+// deployed for real, unattended, on a weekday.
+// ---------------------------------------------------------------------
+const WORKER_BASE_URL = "REPLACE_WITH_YOUR_WORKER_URL";
+const IS_TEST_MODE = WORKER_BASE_URL === "REPLACE_WITH_YOUR_WORKER_URL";
+
+// Test-mode-only: identical prompts/schemas to worker/index.js, used to
+// call Claude directly when no Worker URL has been configured yet.
+const EVALUATE_SYSTEM_PROMPT = `You are the evaluator for a single 11-year-old learning competitive
+programming alone in Python, preparing for USACO Bronze. You judge one
+submission and return one JSON object. You never speak to the child except
+through \`child_message\`; every other field feeds the system.
+
+HOW TO JUDGE CORRECTNESS
+- Read the actual code. Decide if it genuinely solves the problem.
+- Accept ANY correct working method, not only the intended one. A correct
+  hashmap solution is a PASS even if the lesson taught two pointers.
+- The CSES verdict is a hint, not the truth. If ACCEPTED but the code only
+  works by luck or hardcoding, do not pass it. If missing, judge the code
+  on its own.
+- Distinguish three failure types, because they need different help:
+    WRONG    — logic is incorrect (wrong output on valid input)
+    TOO_SLOW — logic is correct but would time out at max input size
+    BROKEN   — it crashes or doesn't run
+
+CHOOSING THE VERDICT
+- PASS: correct and efficient enough. Any valid method.
+- SMALL_CORRECTION: one clear, self-fixable mistake stands between him and
+  a pass — an off-by-one, a missing sort, a wrong print, one bad branch.
+  He can fix it himself with a nudge and resubmit today.
+- REPAIR: the misunderstanding is structural, or the correct-but-slow
+  method he used has NOT appeared in \`taught_recently\`. Needs a fresh
+  lesson tomorrow, not a same-day nudge.
+- EXCEPTION: if the code is correct but too slow, and the fast method
+  needed IS listed in \`taught_recently\`, treat this as SMALL_CORRECTION —
+  he has the tool and just didn't reach for it. Nudge him to remember it.
+  Regardless of verdict in this case, set \`flag_for_reinforcement: true\`,
+  because passing today with a reminder doesn't prove the technique is
+  solid — it should get a short refresher in the next week's material.
+
+THE SCALING NOTE (information, never a gate)
+- If the code PASSES but uses a method that won't survive to Silver (e.g. a
+  brute force that happened to fit, and it is NOT in \`taught_recently\`),
+  still PASS it. Set \`scaling_note\` to a short, encouraging heads-up. Never
+  turn this into a correction or send-back. He advances either way.
+
+WRITING \`child_message\`
+- Written directly TO him, plain words an 11-year-old reads alone.
+- For SMALL_CORRECTION: push him to look, don't hand him the fix. Never
+  give the corrected line, the missing line, or "change X to Y." One
+  nudge, the smallest that might unstick him. Point at WHERE, not WHAT.
+- For PASS: short, specific praise for what he got right.
+- For REPAIR: one sentence — a fresh lesson is coming tomorrow, being
+  stuck here is normal, nothing to fix tonight. Do not teach the idea here.
+- Explain any term the first time you use it. Warm and direct, never
+  babyish.
+
+You must answer only by calling the submit_verdict tool with your answer
+in its arguments. Do not write any text outside that tool call.`;
+
+const EVALUATE_TOOL = {
+  name: "submit_verdict",
+  description: "Submit the evaluation verdict for a student's competitive programming submission.",
+  input_schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["verdict", "failure_type", "reason_for_system", "child_message", "flag_for_reinforcement"],
+    properties: {
+      verdict: { type: "string", enum: ["PASS", "SMALL_CORRECTION", "REPAIR"] },
+      failure_type: { type: "string", enum: ["NONE", "WRONG", "TOO_SLOW", "BROKEN"] },
+      method_used: { type: "string" },
+      reason_for_system: { type: "string" },
+      child_message: { type: "string" },
+      scaling_note: { type: "string" },
+      flag_for_reinforcement: { type: "boolean" },
+      reinforcement_reason: { type: "string" }
+    }
+  }
+};
+
+const HELP_SYSTEM_PROMPT = `You are the live help assistant for a single 11-year-old learning
+competitive programming alone in Python, preparing for USACO Bronze. He
+is mid-problem, stuck, and has already tried what he can alone before
+reaching out. You speak to him directly and only through \`reply_to_nick\`;
+every other field feeds the system, not him.
+
+WHERE THIS SITS
+He already has a Debugging Toolkit, in this order: make a guess first ->
+read the error message -> try one fix -> add a print statement -> search
+externally -> ask for help. This chat IS "ask for help" - he only gets
+here after trying the earlier steps himself. Do not repeat those earlier
+steps as instructions; instead, lead him back into guessing with a
+question, the way "ask for help" should work for someone who already
+tried the rest.
+
+THE ONE RULE THAT MATTERS MOST
+Never give the finished solution. Not the corrected code, not the
+missing line, not "change X to Y." If you can point at WHERE to look
+without saying WHAT is wrong there, that is the right amount of help.
+Guide him to find it himself.
+
+HOW TO HINT
+- One hint at a time. Give the smallest nudge that might unstick him,
+  then stop. Do not stack multiple hints in one reply, and do not
+  pre-empt what he might ask next.
+- Prefer a pointed question over a statement - a question sends him
+  back to his own code with new eyes; a statement resolves it for him.
+- If this is a genuinely new concept he hasn't seen before (not just a
+  bug in something he's already learned), teach it with a short
+  wrong/right code pair - a few lines of code that gets it wrong, a few
+  lines that get it right, nothing else. Never an abstract paragraph
+  explaining the idea in words alone.
+- Explain any term in plain words the very first time you use it in
+  this conversation, even if his lesson file already defined it. Assume
+  nothing carries over from the file into this chat.
+- Match the tone of his lesson files: direct, friendly, zero
+  condescension. Never babyish, never a lecture.
+
+IF HE WANTS THE ANSWER HANDED TO HIM
+Don't shut him down coldly. Acknowledge that it's frustrating in one
+short phrase, then offer one concrete next thing to try - a question or
+a small check, not the fix itself.
+
+WHEN TO STOP HINTING AND ESCALATE
+This is a short, bounded exchange - a few turns, not an open-ended chat.
+Set \`needs_escalation: true\` when either is true:
+- the actual mistake is too complex or structural to fix through a hint
+  exchange (it needs a fresh explanation, not a nudge), or
+- \`hints_given_so_far\` is already several turns deep and he is still
+  stuck on the same thing - do not keep hinting indefinitely.
+When \`needs_escalation\` is true, \`reply_to_nick\` should say so in one
+short, kind sentence - tell him to save his file and mention it to his
+dad for the next correction pass. Do not attempt to teach or fix the
+underlying idea in this reply.
+
+WHAT SUCCESS LOOKS LIKE
+Nick finds the fix himself, or leaves with exactly one concrete next
+thing to try. Never a complete explanation handed to him.
+
+You must answer only by calling the submit_help_reply tool with your
+answer in its arguments. Do not write any text outside that tool call.`;
+
+const HELP_TOOL = {
+  name: "submit_help_reply",
+  description: "Submit the Socratic help reply for Nick's live /help request.",
+  input_schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["reply_to_nick", "debugging_stage", "needs_escalation"],
+    properties: {
+      reply_to_nick: { type: "string" },
+      debugging_stage: { type: "string", enum: ["guess", "read_error", "try_fix", "print_statement", "search", "ask_for_help"] },
+      needs_escalation: { type: "boolean" },
+      escalation_reason: { type: "string" }
+    }
+  }
+};
+
+// ---------------------------------------------------------------------
+// State — client-side only (localStorage), per the decided architecture.
+// One key holds everything for this problem, per the storage guidance
+// of combining data updated together into a single key.
+// ---------------------------------------------------------------------
+const STATE_KEY = "nick_cp_tutor:" + PROBLEM_CONTEXT.problem_id;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) throw new Error("no state yet");
+    return JSON.parse(raw);
+  } catch (e) {
+    return { currentCode: "", lastVerdict: null, attemptCount: 0, helpConversation: [], hintsGiven: 0 };
+  }
+}
+
+function saveState(state) {
+  localStorage.setItem(STATE_KEY, JSON.stringify(state));
+}
+
+let state = loadState();
+
+// ---------------------------------------------------------------------
+// Anthropic call helpers — retry once if the tool isn't invoked, then
+// surface a clear error rather than guessing at malformed output.
+// ---------------------------------------------------------------------
+async function callAnthropicDirect(systemPrompt, tool, envelope) {
+  const body = {
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 1000,
+    system: systemPrompt,
+    messages: [{ role: "user", content: JSON.stringify(envelope, null, 2) }],
+    tools: [tool],
+    tool_choice: { type: "tool", name: tool.name }
+  };
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`API error ${response.status}: ${errText}`);
+    }
+    const data = await response.json();
+    const toolUse = (data.content || []).find(b => b.type === "tool_use");
+    if (toolUse) return toolUse.input;
+    if (attempt === 2) {
+      const textBlock = (data.content || []).find(b => b.type === "text");
+      throw new Error("Model did not call the tool after a retry. Raw text: " + (textBlock ? textBlock.text : JSON.stringify(data.content)));
+    }
+  }
+}
+
+async function callWorker(path, envelope) {
+  const response = await fetch(WORKER_BASE_URL + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(envelope)
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || `Worker error ${response.status}`);
+  }
+  return data;
+}
+
+async function callEvaluate(envelope) {
+  return IS_TEST_MODE
+    ? callAnthropicDirect(EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, envelope)
+    : callWorker("/evaluate", envelope);
+}
+
+async function callHelp(envelope) {
+  return IS_TEST_MODE
+    ? callAnthropicDirect(HELP_SYSTEM_PROMPT, HELP_TOOL, envelope)
+    : callWorker("/help", envelope);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------
+function renderModeBanner() {
+  const el = document.getElementById('modeBanner');
+  if (IS_TEST_MODE) {
+    el.className = 'mode-banner mode-test';
+    el.textContent = 'TEST MODE — calling Claude directly for this preview. This only works while viewing this file inside a Claude conversation. Once the Worker is deployed (see SETUP.md) and WORKER_BASE_URL is filled in, this switches to the real, always-on setup.';
+  } else {
+    el.className = 'mode-banner mode-live';
+    el.textContent = 'LIVE MODE — calling your deployed Worker at ' + WORKER_BASE_URL;
+  }
+}
+
+function renderAttemptCount() {
+  const el = document.getElementById('attemptCount');
+  el.textContent = state.attemptCount === 0
+    ? "No attempts checked yet."
+    : `Checked ${state.attemptCount} time${state.attemptCount === 1 ? '' : 's'} so far.`;
+}
+
+function renderEvaluateResult(verdict) {
+  const el = document.getElementById('evaluateResult');
+  el.innerHTML = `
+    <div class="result-card result-${verdict.verdict}">
+      <span class="result-pill">${escapeHtml(verdict.verdict)}</span>
+      <div class="result-message">${escapeHtml(verdict.child_message)}</div>
+      ${verdict.scaling_note ? `<div class="scaling-note">${escapeHtml(verdict.scaling_note)}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderChat() {
+  const el = document.getElementById('chatLog');
+  if (state.helpConversation.length === 0) {
+    el.innerHTML = '<div class="chat-empty">No messages yet — ask below if you get stuck.</div>';
+    return;
+  }
+  el.innerHTML = state.helpConversation.map(turn =>
+    `<div class="chat-bubble chat-${turn.speaker}">${escapeHtml(turn.message)}</div>`
+  ).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+// ---------------------------------------------------------------------
+// Actions
+// ---------------------------------------------------------------------
+async function handleCheckCode() {
+  const btn = document.getElementById('checkBtn');
+  const code = document.getElementById('codeInput').value;
+  const csesVerdict = document.getElementById('csesVerdictInput').value;
+
+  if (!code.trim()) {
+    document.getElementById('evaluateResult').innerHTML = '<div class="error-text">Paste your code first.</div>';
+    return;
+  }
+
+  state.currentCode = code;
+  saveState(state);
+
+  btn.disabled = true;
+  document.getElementById('evaluateResult').innerHTML = '<div class="loading-text">Checking your code…</div>';
+
+  const envelope = Object.assign({}, PROBLEM_CONTEXT, {
+    cses_verdict: csesVerdict || "not submitted yet",
+    submission: code
+  });
+
+  try {
+    const verdict = await callEvaluate(envelope);
+    state.attemptCount += 1;
+    state.lastVerdict = verdict;
+    saveState(state);
+    renderEvaluateResult(verdict);
+    renderAttemptCount();
+  } catch (err) {
+    document.getElementById('evaluateResult').innerHTML = `<div class="error-text">Couldn't check your code: ${escapeHtml(err.message || String(err))}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function handleAskForHelp() {
+  const btn = document.getElementById('askBtn');
+  const input = document.getElementById('nickMessageInput');
+  const message = input.value;
+  const code = document.getElementById('codeInput').value || state.currentCode;
+
+  if (!message.trim()) return;
+  if (!code.trim()) {
+    document.getElementById('helpStatus').innerHTML = '<div class="error-text">Paste your code above first, then ask.</div>';
+    return;
+  }
+
+  state.helpConversation.push({ speaker: 'nick', message });
+  renderChat();
+  input.value = '';
+  btn.disabled = true;
+  document.getElementById('helpStatus').innerHTML = '<div class="loading-text">Thinking…</div>';
+
+  const envelope = Object.assign({}, PROBLEM_CONTEXT, {
+    current_code: code,
+    nick_message: message,
+    conversation_so_far: state.helpConversation.slice(0, -1),
+    hints_given_so_far: state.hintsGiven
+  });
+
+  try {
+    const reply = await callHelp(envelope);
+    state.helpConversation.push({ speaker: 'tutor', message: reply.reply_to_nick });
+    state.hintsGiven += 1;
+    saveState(state);
+    renderChat();
+    document.getElementById('helpStatus').innerHTML = reply.needs_escalation
+      ? '<div class="escalation-banner">This one has been flagged for your dad\'s next check-in — no need to keep going back and forth on it here.</div>'
+      : '';
+  } catch (err) {
+    document.getElementById('helpStatus').innerHTML = `<div class="error-text">Couldn't reach the tutor: ${escapeHtml(err.message || String(err))}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------
+function init() {
+  renderModeBanner();
+  document.getElementById('codeInput').value = state.currentCode || '';
+  renderAttemptCount();
+  renderChat();
+  if (state.lastVerdict) renderEvaluateResult(state.lastVerdict);
+
+  document.getElementById('checkBtn').addEventListener('click', handleCheckCode);
+  document.getElementById('askBtn').addEventListener('click', handleAskForHelp);
+  document.getElementById('nickMessageInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleAskForHelp();
+  });
+  document.getElementById('codeInput').addEventListener('change', () => {
+    state.currentCode = document.getElementById('codeInput').value;
+    saveState(state);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
