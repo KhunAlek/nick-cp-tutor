@@ -17,6 +17,7 @@
 // recurring issue during testing happened there, not in /evaluate — so it
 // runs on a stronger model instead of trying to prompt-engineer around a
 // faster/cheaper model's limits indefinitely.
+//TEST
 const MODEL_EVALUATE = "claude-haiku-4-5-20251001";
 const MODEL_HELP = "claude-sonnet-5";
 
