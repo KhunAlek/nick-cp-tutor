@@ -235,6 +235,16 @@ async function callAnthropic(env, systemPrompt, tool, envelope) {
   throw new Error("Model did not call the tool after a retry. Raw text: " + lastTextSeen);
 }
 
+// REPAIR's child_message is specified as one short, reassuring sentence
+// that does NOT diagnose or teach — that's what tomorrow's fresh lesson
+// is for. A long paragraph or a coaching question means the model wrote
+// a /help-style hint instead of a same-day close-out message.
+function repairMessageActuallyTeaches(verdict) {
+  if (verdict.verdict !== "REPAIR") return false;
+  const msg = (verdict.child_message || "").trim();
+  return msg.includes("?") || msg.length > 220;
+}
+
 async function handleEvaluate(request, env) {
   let envelope;
   try {
@@ -247,12 +257,36 @@ async function handleEvaluate(request, env) {
   }
 
   try {
-    const verdict = await callAnthropic(env, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, envelope);
+    let verdict = await callAnthropic(env, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, envelope);
+
+    if (repairMessageActuallyTeaches(verdict)) {
+      const retryEnvelope = Object.assign({}, envelope, {
+        tutor_self_correction_note:
+          "Your previous child_message for this REPAIR verdict diagnosed the problem and/or asked a question — that teaches, which REPAIR must not do. Rewrite child_message as ONE short, reassuring sentence only: a fresh lesson is coming tomorrow, being stuck here is normal, nothing to fix tonight. No diagnosis, no question."
+      });
+      verdict = await callAnthropic(env, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, retryEnvelope);
+    }
+
     return jsonResponse(verdict);
   } catch (err) {
     console.error("evaluate error:", err);
     return jsonResponse({ error: err.message || String(err) }, 502);
   }
+}
+
+// Heuristic, not a parser: a genuine question-first reply has its first
+// '?' with no completed sentence (". " or "! ") appearing before it —
+// regardless of overall length. Character-count alone isn't reliable:
+// a short "explain, then ask" reply can still fit its '?' within an
+// arbitrary early cutoff. Checking for a completed clause before the
+// question mark catches the actual pattern instead of just its length.
+function opensWithQuestion(text) {
+  if (!text) return false;
+  const trimmed = text.trim();
+  const qIndex = trimmed.indexOf("?");
+  if (qIndex === -1) return false;
+  const before = trimmed.slice(0, qIndex);
+  return !/[.!]\s/.test(before);
 }
 
 async function handleHelp(request, env) {
@@ -267,7 +301,20 @@ async function handleHelp(request, env) {
   }
 
   try {
-    const reply = await callAnthropic(env, HELP_SYSTEM_PROMPT, HELP_TOOL, envelope);
+    let reply = await callAnthropic(env, HELP_SYSTEM_PROMPT, HELP_TOOL, envelope);
+
+    if (!opensWithQuestion(reply.reply_to_nick)) {
+      // Prompt wording alone hasn't reliably prevented "explain, then
+      // ask" replies during testing. Rather than ship one we can
+      // already tell violates the rule, retry once with explicit
+      // feedback about what to fix.
+      const retryEnvelope = Object.assign({}, envelope, {
+        tutor_self_correction_note:
+          "Your previous attempt explained the situation before asking anything, which is not allowed here. Rewrite reply_to_nick so the very FIRST sentence is a question, with no explanation before it — see the WRONG SHAPE / RIGHT SHAPE examples in your instructions."
+      });
+      reply = await callAnthropic(env, HELP_SYSTEM_PROMPT, HELP_TOOL, retryEnvelope);
+    }
+
     return jsonResponse(reply);
   } catch (err) {
     console.error("help error:", err);
