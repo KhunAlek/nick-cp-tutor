@@ -11,7 +11,14 @@
 // No login, no D1, no sessions, no audit log — per the brief's guardrails.
 // State lives client-side in the lesson HTML (localStorage), not here.
 
-const MODEL = "claude-haiku-4-5-20251001";
+// /evaluate is a fairly mechanical classification task (PASS / SMALL_CORRECTION
+// / REPAIR) and Haiku has been reliable at it through every test. /help is a
+// genuinely more nuanced judgment call (how much a hint reveals) — every
+// recurring issue during testing happened there, not in /evaluate — so it
+// runs on a stronger model instead of trying to prompt-engineer around a
+// faster/cheaper model's limits indefinitely.
+const MODEL_EVALUATE = "claude-haiku-4-5-20251001";
+const MODEL_HELP = "claude-sonnet-5";
 
 const EVALUATE_SYSTEM_PROMPT = `You are the evaluator for a single 11-year-old learning competitive
 programming alone in Python, preparing for USACO Bronze. You judge one
@@ -126,6 +133,15 @@ HOW TO HINT
   anything?" - one question, nothing explained first, nothing given
   away. Let his answer tell you how much he already sees, then react to
   that in the NEXT turn rather than pre-empting it in this one.
+- A yes/no question that names the specific missing technique is just
+  as much of a giveaway as a statement, even though it's grammatically
+  a question. "Did you sort the \`pairs\` list?" tells him exactly what
+  to add — there's nothing left to work out, only a fact to confirm.
+  Ask about a piece of STATE or BEHAVIOR he can go check instead of
+  naming the technique: not "did you sort it?" but "what does your
+  \`pairs\` list actually look like right when the while loop starts —
+  is it in the same order you built it in, or could it have changed?"
+  He should still have to connect what he observes to the fix himself.
 - If this is a genuinely new concept he hasn't seen before (not just a
   bug in something he's already learned), teach it with a short
   wrong/right code pair - a few lines of code that gets it wrong, a few
@@ -196,9 +212,9 @@ function jsonResponse(obj, status = 200) {
 // model writes text instead of invoking the tool (observed occasionally
 // with Haiku during testing) before giving up with a clear error — never
 // silently reshapes non-conforming text into something schema-shaped.
-async function callAnthropic(env, systemPrompt, tool, envelope) {
+async function callAnthropic(env, model, systemPrompt, tool, envelope) {
   const body = {
-    model: MODEL,
+    model: model,
     max_tokens: 1000,
     system: systemPrompt,
     messages: [{ role: "user", content: JSON.stringify(envelope, null, 2) }],
@@ -257,14 +273,14 @@ async function handleEvaluate(request, env) {
   }
 
   try {
-    let verdict = await callAnthropic(env, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, envelope);
+    let verdict = await callAnthropic(env, MODEL_EVALUATE, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, envelope);
 
     if (repairMessageActuallyTeaches(verdict)) {
       const retryEnvelope = Object.assign({}, envelope, {
         tutor_self_correction_note:
           "Your previous child_message for this REPAIR verdict diagnosed the problem and/or asked a question — that teaches, which REPAIR must not do. Rewrite child_message as ONE short, reassuring sentence only: a fresh lesson is coming tomorrow, being stuck here is normal, nothing to fix tonight. No diagnosis, no question."
       });
-      verdict = await callAnthropic(env, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, retryEnvelope);
+      verdict = await callAnthropic(env, MODEL_EVALUATE, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, retryEnvelope);
     }
 
     return jsonResponse(verdict);
@@ -289,6 +305,23 @@ function opensWithQuestion(text) {
   return !/[.!]\s/.test(before);
 }
 
+// A second, different failure mode: the reply DOES open with a
+// question, but it's a closed yes/no question naming the fix directly
+// ("did you sort the list?") rather than asking him to go observe
+// something. Not tied to "sort" specifically, so this generalizes to
+// future problems' hints too — it's about question SHAPE (closed
+// yes/no), not the specific technique being taught. Checked anywhere
+// before the first '?', not just at the very start of the clause, so a
+// short interjection ("Hmm — did you sort it?") doesn't slip through.
+function isLeadingYesNoQuestion(text) {
+  if (!text) return false;
+  const trimmed = text.trim();
+  const qIndex = trimmed.indexOf("?");
+  if (qIndex === -1) return false;
+  const before = trimmed.slice(0, qIndex);
+  return /\b(did|do|does|have|has|is|are|was|were)\s+you\b/i.test(before);
+}
+
 async function handleHelp(request, env) {
   let envelope;
   try {
@@ -301,18 +334,19 @@ async function handleHelp(request, env) {
   }
 
   try {
-    let reply = await callAnthropic(env, HELP_SYSTEM_PROMPT, HELP_TOOL, envelope);
+    let reply = await callAnthropic(env, MODEL_HELP, HELP_SYSTEM_PROMPT, HELP_TOOL, envelope);
 
-    if (!opensWithQuestion(reply.reply_to_nick)) {
+    if (!opensWithQuestion(reply.reply_to_nick) || isLeadingYesNoQuestion(reply.reply_to_nick)) {
       // Prompt wording alone hasn't reliably prevented "explain, then
-      // ask" replies during testing. Rather than ship one we can
-      // already tell violates the rule, retry once with explicit
+      // ask" replies during testing, nor "ask a yes/no question that
+      // names the fix directly" replies. Rather than ship one we can
+      // already tell violates the rules, retry once with explicit
       // feedback about what to fix.
       const retryEnvelope = Object.assign({}, envelope, {
         tutor_self_correction_note:
-          "Your previous attempt explained the situation before asking anything, which is not allowed here. Rewrite reply_to_nick so the very FIRST sentence is a question, with no explanation before it — see the WRONG SHAPE / RIGHT SHAPE examples in your instructions."
+          "Your previous attempt either explained the situation before asking anything, or asked a yes/no question that names the specific missing technique directly (like 'did you sort the list?') — both give too much away. Rewrite reply_to_nick as ONE open question about what the code currently does or what a specific piece of state looks like, with no explanation first and no naming the fix. See the WRONG SHAPE / RIGHT SHAPE examples in your instructions."
       });
-      reply = await callAnthropic(env, HELP_SYSTEM_PROMPT, HELP_TOOL, retryEnvelope);
+      reply = await callAnthropic(env, MODEL_HELP, HELP_SYSTEM_PROMPT, HELP_TOOL, retryEnvelope);
     }
 
     return jsonResponse(reply);
