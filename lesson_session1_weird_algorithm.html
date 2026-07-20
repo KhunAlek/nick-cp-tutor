@@ -72,6 +72,12 @@
   .check-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
   .check-box { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
 
+  .step-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0; background: var(--surface); }
+  .step-row { display: flex; border-bottom: 1px solid var(--border); }
+  .step-row:last-child { border-bottom: none; }
+  .step-num { width: 44px; flex-shrink: 0; background: var(--surface-alt); display: flex; align-items: flex-start; justify-content: center; padding-top: 14px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-muted); border-right: 1px solid var(--border); }
+  .step-text { padding: 14px 18px; font-size: 14px; line-height: 1.6; }
+
   .code-compare { display: flex; gap: 14px; margin: 18px 0; flex-wrap: wrap; flex-direction: column; }
   .code-block { flex: 1 1 100%; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
   .code-header { padding: 8px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -141,7 +147,7 @@
     body { background: #FFFFFF !important; color: #000000 !important; }
     .page { max-width: 100%; padding: 0; }
     * { color: #000000 !important; }
-    .box, .diagram-wrap, .check-item, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
+    .box, .diagram-wrap, .check-item, .step-num, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
     .code-body { background: #FFFFFF !important; color: #000000 !important; border: 1px solid #000000; }
     h1, h2, h3 { color: #000000 !important; }
     .panel, .mode-banner { display: none; }
@@ -173,27 +179,91 @@
   </header>
 
   <div class="section">
-    <h2 class="section-title">Welcome to CSES</h2>
-    <p>Starting today, problems come from <strong>cses.fi/problemset</strong> — a real competitive programming judge. No leaderboard, no pressure, just instant pass/fail feedback the moment you submit. The routine for every problem, from now on, is always the same four steps:</p>
-    <div class="checklist">
-      <div class="check-item"><div class="check-box"></div><div>Read the problem statement carefully</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Write your solution in Thonny</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Test it locally against the sample input on the problem page</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Submit on CSES — you'll know instantly if it's correct</div></div>
+    <h2 class="section-title">What CSES is, and how to get there</h2>
+    <p><strong>CSES</strong> stands for a Finnish computer science school that made this problem set — you don't need to remember that part. What matters is what it does: a website with hundreds of problems, sorted into groups, where you submit code and get an instant pass or fail, as many times as you want.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 460 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <rect x="20" y="20" width="130" height="60" rx="8" fill="#EAF1FA" stroke="#2B5FA3" stroke-width="1.5"/>
+        <text x="85" y="45" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#2B5FA3">Read the</text>
+        <text x="85" y="62" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#2B5FA3">problem</text>
+
+        <line x1="150" y1="50" x2="180" y2="50" stroke="#8C877F" stroke-width="1.5" marker-end="url(#arrowflow)"/>
+
+        <rect x="180" y="20" width="130" height="60" rx="8" fill="#E9F6EE" stroke="#1A6B3C" stroke-width="1.5"/>
+        <text x="245" y="45" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A6B3C">Write your</text>
+        <text x="245" y="62" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A6B3C">Python code</text>
+
+        <line x1="310" y1="50" x2="340" y2="50" stroke="#8C877F" stroke-width="1.5" marker-end="url(#arrowflow)"/>
+
+        <rect x="340" y="20" width="100" height="60" rx="8" fill="#F1ECF7" stroke="#6B4E8E" stroke-width="1.5"/>
+        <text x="390" y="45" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#6B4E8E">Submit,</text>
+        <text x="390" y="62" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#6B4E8E">get result</text>
+
+        <line x1="390" y1="80" x2="390" y2="110" stroke="#8C877F" stroke-width="1.5" marker-end="url(#arrowflow)"/>
+        <line x1="340" y1="140" x2="150" y2="140" stroke="#8C877F" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <line x1="150" y1="140" x2="150" y2="110" stroke="#8C877F" stroke-width="1.5" marker-end="url(#arrowflow)"/>
+
+        <rect x="330" y="110" width="120" height="45" rx="8" fill="#FAFAF8" stroke="#8C877F" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <text x="390" y="137" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#34302A">If wrong, try again</text>
+
+        <defs>
+          <marker id="arrowflow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#8C877F"/>
+          </marker>
+        </defs>
+      </svg>
+      <div class="diagram-caption">This loop is the whole engine of Stage 3. No time pressure, no one watching, unlimited tries.</div>
+    </div>
+
+    <div class="step-list">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">Go to <strong>cses.fi/problemset</strong> in your browser.</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">Click <strong>Introductory Problems</strong> near the top of the list. Ignore every other group for now — they need things you haven't learned yet.</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">Click the first problem in that list: <strong>Weird Algorithm</strong> (or use the link above).</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-text">Read the problem statement on the page. It will mention "input" and "output" — that's explained below.</div></div>
     </div>
   </div>
 
   <div class="section">
     <h2 class="section-title">The problem in plain words</h2>
     <div class="box box-purple">
-      <div class="box-label">The problem in plain words</div>
-      <p><strong>Weird Algorithm</strong> gives you a starting number n. Print n, then repeat: if n is even, cut it in half; if n is odd, triple it and add 1. Keep going and keep printing until n reaches 1 — then print 1 and stop.</p>
+      <div class="box-label">The rule</div>
+      <p><strong>Weird Algorithm</strong> gives you a starting number n. Print n. If n is even, divide it by 2. If n is odd, multiply it by 3 and add 1. Keep doing this to the new n each time. Stop once n becomes 1 — print 1 too, then stop.</p>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 460 140" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="230" y="20" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Example starting at n = 3</text>
+        <g font-family="JetBrains Mono" font-size="13" fill="#34302A">
+          <rect x="10" y="40" width="46" height="36" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/>
+          <text x="33" y="63" text-anchor="middle">3</text>
+          <rect x="76" y="40" width="46" height="36" rx="6" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="99" y="63" text-anchor="middle">10</text>
+          <rect x="142" y="40" width="46" height="36" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/>
+          <text x="165" y="63" text-anchor="middle">5</text>
+          <rect x="208" y="40" width="46" height="36" rx="6" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="231" y="63" text-anchor="middle">16</text>
+          <rect x="274" y="40" width="46" height="36" rx="6" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="297" y="63" text-anchor="middle">8</text>
+          <rect x="340" y="40" width="46" height="36" rx="6" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="363" y="63" text-anchor="middle">4</text>
+          <rect x="406" y="40" width="46" height="36" rx="6" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="429" y="63" text-anchor="middle">2</text>
+        </g>
+        <text x="230" y="115" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6E6A62">3 is odd (x3+1=10) — 10 is even (÷2=5) — 5 is odd (x3+1=16) — 16 even (÷2=8) — 8 even (÷2=4) — 4 even (÷2=2) — 2 even (÷2=1), then print 1 and stop</text>
+      </svg>
+      <div class="diagram-caption">Every number eventually reaches 1, no matter where it starts. Nobody has ever proven why, mathematically — but it always seems to happen.</div>
+    </div>
+
+    <div class="box box-purple">
+      <div class="box-label">A fun fact worth knowing</div>
+      <p>This exact rule is a real unsolved math problem, called the Collatz conjecture. Mathematicians have tested it on enormous numbers and it always reaches 1 eventually, but nobody in the world has ever proven it always will. You're about to write code that plays with an actual open mystery in mathematics.</p>
     </div>
   </div>
 
   <div class="section">
     <h2 class="section-title">The wall almost everyone hits first: input() gives you text</h2>
-    <p>You've used <code>input()</code> before in your Stage 1 projects. Here's the part that trips people up the first time: <code>input()</code> always gives you back <strong>text</strong> — even if the person typed a number, Python treats it as a string until you explicitly convert it. Wrapping it in <code>int(...)</code> turns that text into an actual number you can do math with.</p>
+    <p>You already know <code>input()</code> from Guess the Number — this is the exact same tool, just used to receive a number from CSES's judge instead of asking a person to type one. Here's the part that trips people up the first time: <code>input()</code> always gives you back <strong>text</strong>, even if what was typed looks like a number — you hit this exact wall back in Project 1. Python treats it as a string until you explicitly convert it. Wrapping it in <code>int(...)</code> turns that text into an actual number you can do math with. Same rule, same fix, new place.</p>
 
     <div class="code-compare">
       <div class="code-block code-wrong">
@@ -232,6 +302,17 @@ while True:
   </div>
 
   <div class="section">
+    <h2 class="section-title">Which of your tools apply here</h2>
+    <p>Before you write anything, think about what you already know that fits this problem.</p>
+    <div class="checklist">
+      <div class="check-item"><div class="check-box"></div><div>You need a loop that keeps going until a condition is met — you don't know how many times in advance, so <code>while</code> fits better than <code>for</code></div></div>
+      <div class="check-item"><div class="check-box"></div><div>You need to check even versus odd — same leftover-after-dividing trick you've used before: <code>n % 2 == 0</code> means even</div></div>
+      <div class="check-item"><div class="check-box"></div><div>You need to print inside the loop every time, not just at the end</div></div>
+    </div>
+    <p>Make a guess before you start coding: roughly how many lines do you think this needs? Write your guess as a comment, then see how close you were.</p>
+  </div>
+
+  <div class="section">
     <h2 class="section-title">Common mistakes on this one</h2>
     <div class="mistake-list">
       <div class="mistake-item"><div class="mistake-icon">✕</div><div>Forgetting <code>int()</code> around <code>input()</code> — the classic first wall, crashes the moment you try any math on n.</div></div>
@@ -266,12 +347,11 @@ while True:
       <div class="box-label">Suggested target</div>
       <p>Try <strong>Weird Algorithm</strong>, the very first CSES Introductory Problem. This is the one session where a specific problem is assigned rather than chosen — from Session 2 onward, you'll start picking your own.</p>
     </div>
-    <div class="checklist">
-      <div class="check-item"><div class="check-box"></div><div>Open cses.fi/problemset, find Weird Algorithm in Introductory Problems</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Write one sentence as a comment at the top describing what the problem is asking, in your own words</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Read n with int(input()), not plain input()</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Loop and print each n with end=" ", following the even/odd rule until n reaches 1</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Test it against the sample, submit it, then check your code below</div></div>
+    <div class="step-list">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">Write one sentence as a comment at the top of your file, describing what the problem is asking, in your own words.</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">Write the code in Thonny. Test it yourself first with a hardcoded <code>n = 3</code>, before reading anything from CSES.</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">Test <code>n = 1</code> too — it's a special case, it should just print 1 and stop immediately. Once both work, switch the first line to <code>n = int(input())</code>.</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-text">Go back to the CSES page for Weird Algorithm, paste your code into the submit box, and submit it. Then check it below too.</div></div>
     </div>
   </div>
 
@@ -323,8 +403,8 @@ while True:
     <h2 class="section-title">If you get stuck</h2>
     <p>Same toolkit as always. Guess first, read the error or the failed test carefully, try one fix, print a variable if you're unsure what it holds, search if you need to — and if you're still stuck, ask here.</p>
     <div class="box box-plain">
-      <div class="box-label">A trick just for this one</div>
-      <p>If you're not sure what type a variable is, try <code>print(type(n))</code> right after reading it. It'll tell you exactly whether you've got a string or a real number — no guessing needed.</p>
+      <div class="box-label">Two tricks just for this one</div>
+      <p>If you're not sure what type a variable is, try <code>print(type(n))</code> right after reading it — it'll tell you exactly whether you've got a string or a real number, no guessing needed. And if CSES says your answer is wrong but your code worked fine when you tested it yourself, check <code>n = 1</code> specifically — some solutions forget to print anything at all when n already equals 1.</p>
     </div>
 
     <div class="panel">
@@ -343,6 +423,7 @@ while True:
     <span>Suggested: Weird Algorithm (Introductory Problems)</span>
     <span>Debugging Toolkit applies here</span>
   </footer>
+
 
 </div>
 
