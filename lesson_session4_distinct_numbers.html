@@ -42,6 +42,12 @@
   .cses-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 13px; font-weight: 600; color: var(--blue); text-decoration: none; padding: 7px 14px; background: var(--blue-light); border: 1px solid var(--blue-border); border-radius: 6px; width: fit-content; }
   .cses-link:hover { background: var(--blue-border); }
 
+  .top-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; font-size: 13px; }
+  .top-nav a { display: inline-flex; align-items: center; gap: 6px; color: var(--blue); text-decoration: none; font-weight: 600; padding: 7px 13px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); }
+  .top-nav a:hover { background: var(--surface-alt); }
+  .nav-prev-next { display: flex; gap: 10px; flex-wrap: wrap; }
+  @media print { .top-nav { display: none; } }
+
   .section { margin-bottom: 44px; }
   h2.section-title { font-size: 1.35rem; padding-bottom: 10px; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
   p { margin-bottom: 14px; }
@@ -147,6 +153,14 @@
 </head>
 <body>
 <div class="page">
+
+  <div class="top-nav">
+    <a href="index.html">↑ All Sessions</a>
+    <div class="nav-prev-next">
+      <a href="lesson_session3_repetitions.html">← S3 · Repetitions</a>
+      <a href="lesson_session5_coin_piles.html">S5 · Coin Piles →</a>
+    </div>
+  </div>
 
   <header class="doc-header">
     <div class="eyebrow">Stage 3 · Session 4 · Introductory Problems · Repeatable lesson</div>
