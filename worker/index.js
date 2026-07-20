@@ -8,8 +8,15 @@
 // (set via `wrangler secret put ANTHROPIC_API_KEY`, or pushed automatically
 // by the GitHub Actions deploy workflow — see ../SETUP.md).
 //
-// No login, no D1, no sessions, no audit log — per the brief's guardrails.
-// State lives client-side in the lesson HTML (localStorage), not here.
+// Still no login, no sessions, no audit-log UI, no governance ceremony —
+// those guardrails stand. One deliberate addition on top of the original
+// "no D1" rule: every completed /evaluate and /help call is now logged as
+// one row in the D1 database bound as env.DB (see the `events` table —
+// created directly with the Cloudflare D1 tool, no migration system). This
+// is data collection for the progress tracker and curriculum-correction
+// review, not an audit trail: one flat table, queried directly when
+// needed, nothing built on top of it. A logging failure never breaks a
+// request to Nick — see logEvent's own try/catch below.
 
 // /evaluate is a fairly mechanical classification task (PASS / SMALL_CORRECTION
 // / REPAIR) and Haiku has been reliable at it through every test. /help is a
@@ -208,6 +215,56 @@ function jsonResponse(obj, status = 200) {
   });
 }
 
+// One flat log row per completed /evaluate or /help call. Never throws
+// into the request path — a failed write is logged to console and
+// swallowed, because losing a log row is fine, breaking Nick's session
+// over it is not. Runs via ctx.waitUntil so it never delays the response
+// he's waiting on.
+async function logEvent(env, ctx, row) {
+  if (!env || !env.DB) return; // no D1 binding available — skip silently
+  const insert = env.DB.prepare(
+    `INSERT INTO events (
+      event_type, problem_id, problem_title, submission, cses_verdict,
+      verdict, failure_type, method_used, reason_for_system, child_message,
+      scaling_note, flag_for_reinforcement, reinforcement_reason,
+      nick_message, reply_to_nick, debugging_stage, needs_escalation,
+      escalation_reason, hints_given_so_far, raw_envelope, raw_response
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+  ).bind(
+    row.event_type ?? null,
+    row.problem_id ?? null,
+    row.problem_title ?? null,
+    row.submission ?? null,
+    row.cses_verdict ?? null,
+    row.verdict ?? null,
+    row.failure_type ?? null,
+    row.method_used ?? null,
+    row.reason_for_system ?? null,
+    row.child_message ?? null,
+    row.scaling_note ?? null,
+    row.flag_for_reinforcement === true ? 1 : row.flag_for_reinforcement === false ? 0 : null,
+    row.reinforcement_reason ?? null,
+    row.nick_message ?? null,
+    row.reply_to_nick ?? null,
+    row.debugging_stage ?? null,
+    row.needs_escalation === true ? 1 : row.needs_escalation === false ? 0 : null,
+    row.escalation_reason ?? null,
+    row.hints_given_so_far ?? null,
+    row.raw_envelope ?? null,
+    row.raw_response ?? null
+  );
+
+  const promise = insert.run().catch((err) => {
+    console.error("D1 log write failed (non-fatal):", err);
+  });
+
+  if (ctx && typeof ctx.waitUntil === "function") {
+    ctx.waitUntil(promise);
+  } else {
+    await promise;
+  }
+}
+
 // Calls the Anthropic API with a forced tool call. Retries once if the
 // model writes text instead of invoking the tool (observed occasionally
 // with Haiku during testing) before giving up with a clear error — never
@@ -261,7 +318,7 @@ function repairMessageActuallyTeaches(verdict) {
   return msg.includes("?") || msg.length > 220;
 }
 
-async function handleEvaluate(request, env) {
+async function handleEvaluate(request, env, ctx) {
   let envelope;
   try {
     envelope = await request.json();
@@ -282,6 +339,24 @@ async function handleEvaluate(request, env) {
       });
       verdict = await callAnthropic(env, MODEL_EVALUATE, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, retryEnvelope);
     }
+
+    await logEvent(env, ctx, {
+      event_type: "evaluate",
+      problem_id: envelope.problem_id,
+      problem_title: envelope.problem_title,
+      submission: envelope.submission,
+      cses_verdict: envelope.cses_verdict,
+      verdict: verdict.verdict,
+      failure_type: verdict.failure_type,
+      method_used: verdict.method_used,
+      reason_for_system: verdict.reason_for_system,
+      child_message: verdict.child_message,
+      scaling_note: verdict.scaling_note,
+      flag_for_reinforcement: verdict.flag_for_reinforcement,
+      reinforcement_reason: verdict.reinforcement_reason,
+      raw_envelope: JSON.stringify(envelope),
+      raw_response: JSON.stringify(verdict)
+    });
 
     return jsonResponse(verdict);
   } catch (err) {
@@ -322,7 +397,7 @@ function isLeadingYesNoQuestion(text) {
   return /\b(did|do|does|have|has|is|are|was|were)\s+you\b/i.test(before);
 }
 
-async function handleHelp(request, env) {
+async function handleHelp(request, env, ctx) {
   let envelope;
   try {
     envelope = await request.json();
@@ -349,6 +424,20 @@ async function handleHelp(request, env) {
       reply = await callAnthropic(env, MODEL_HELP, HELP_SYSTEM_PROMPT, HELP_TOOL, retryEnvelope);
     }
 
+    await logEvent(env, ctx, {
+      event_type: "help",
+      problem_id: envelope.problem_id,
+      problem_title: envelope.problem_title,
+      nick_message: envelope.nick_message,
+      reply_to_nick: reply.reply_to_nick,
+      debugging_stage: reply.debugging_stage,
+      needs_escalation: reply.needs_escalation,
+      escalation_reason: reply.escalation_reason,
+      hints_given_so_far: envelope.hints_given_so_far,
+      raw_envelope: JSON.stringify(envelope),
+      raw_response: JSON.stringify(reply)
+    });
+
     return jsonResponse(reply);
   } catch (err) {
     console.error("help error:", err);
@@ -365,11 +454,11 @@ export default {
     const url = new URL(request.url);
 
     if (request.method === "POST" && url.pathname === "/evaluate") {
-      return handleEvaluate(request, env);
+      return handleEvaluate(request, env, ctx);
     }
 
     if (request.method === "POST" && url.pathname === "/help") {
-      return handleHelp(request, env);
+      return handleHelp(request, env, ctx);
     }
 
     return jsonResponse({ error: "Not found. Use POST /evaluate or POST /help." }, 404);
