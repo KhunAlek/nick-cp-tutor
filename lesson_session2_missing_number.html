@@ -72,6 +72,12 @@
   .check-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
   .check-box { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
 
+  .step-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0; background: var(--surface); }
+  .step-row { display: flex; border-bottom: 1px solid var(--border); }
+  .step-row:last-child { border-bottom: none; }
+  .step-num { width: 44px; flex-shrink: 0; background: var(--surface-alt); display: flex; align-items: flex-start; justify-content: center; padding-top: 14px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-muted); border-right: 1px solid var(--border); }
+  .step-text { padding: 14px 18px; font-size: 14px; line-height: 1.6; }
+
   .code-compare { display: flex; gap: 14px; margin: 18px 0; flex-wrap: wrap; flex-direction: column; }
   .code-block { flex: 1 1 100%; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
   .code-header { padding: 8px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -141,7 +147,7 @@
     body { background: #FFFFFF !important; color: #000000 !important; }
     .page { max-width: 100%; padding: 0; }
     * { color: #000000 !important; }
-    .box, .diagram-wrap, .check-item, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
+    .box, .diagram-wrap, .check-item, .step-num, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
     .code-body { background: #FFFFFF !important; color: #000000 !important; border: 1px solid #000000; }
     h1, h2, h3 { color: #000000 !important; }
     .panel, .mode-banner { display: none; }
@@ -175,6 +181,10 @@
   <div class="section">
     <h2 class="section-title">A new skill: picking your own problem</h2>
     <p>From here on, you get to choose which CSES Introductory Problem to attempt, instead of always being assigned one. Judging difficulty is its own skill: look at the solve-count number and the short description, and if it's still unclear after two reads, that's a sign to try a different one instead of guessing blindly.</p>
+    <div class="box box-plain">
+      <div class="box-label">Suggested for today</div>
+      <p>Missing Number is a good next pick — everything below is built around it. A different pick is fine too, just say which one you chose in your comment.</p>
+    </div>
   </div>
 
   <div class="section">
@@ -245,6 +255,29 @@ numbers = list(map(int, input().split()))   # the new tool for today -- reads se
   <div class="section">
     <h2 class="section-title">The trick: what should the numbers add up to</h2>
     <p>If none were missing, the numbers 1 through n would add up to a known total — there's a shortcut formula for that: <code>n * (n + 1) // 2</code>. Compare that expected total to what the numbers you actually read add up to (<code>sum(numbers)</code>). The difference between them is exactly the missing number.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 460 175" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="230" y="18" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">n = 5, given: 1 2 4 5 — missing: 3</text>
+
+        <rect x="20" y="32" width="170" height="34" rx="5" fill="#EAF1FA" stroke="#C3D6EE"/>
+        <text x="105" y="48" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#2B5FA3">expected total, if nothing missing</text>
+        <text x="105" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#2B5FA3">5*6//2 = 15</text>
+
+        <rect x="270" y="32" width="170" height="34" rx="5" fill="#F1ECF7" stroke="#D6C7E8"/>
+        <text x="355" y="48" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6B4E8E">actual total of 1, 2, 4, 5</text>
+        <text x="355" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#6B4E8E">sum(...) = 12</text>
+
+        <path d="M105 66 L105 95 M355 66 L355 95 M105 95 L230 118 M355 95 L230 118" stroke="#8C877F" stroke-width="1"/>
+
+        <rect x="165" y="118" width="130" height="34" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+        <text x="230" y="134" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#1A6B3C">15 minus 12</text>
+        <text x="230" y="148" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#1A6B3C">= 3</text>
+
+        <text x="230" y="170" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6E6A62">that's the missing number — no need to ever look for it directly</text>
+      </svg>
+      <div class="diagram-caption">Same shortcut-over-brute-force instinct as your Stage 2 gate — find the fast fact instead of checking every number one by one.</div>
+    </div>
   </div>
 
   <div class="section">
@@ -282,12 +315,11 @@ numbers = list(map(int, input().split()))   # the new tool for today -- reads se
       <div class="box-label">Suggested targets</div>
       <p>Try <strong>Missing Number</strong> or <strong>Repetitions</strong>, both near the top of the Introductory Problems list. A different pick is fine too — just check the input format and note in your comment whether it needs today's new reading tool or something else.</p>
     </div>
-    <div class="checklist">
-      <div class="check-item"><div class="check-box"></div><div>Open CSES Introductory Problems and pick an unsolved one near the top (Missing Number suggested)</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Write one sentence as a comment at the top describing what the problem is asking, in your own words</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Check the input format — read n first, then the numbers with list(map(int, input().split()))</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Compute expected = n * (n + 1) // 2 and actual = sum(numbers), then print the difference</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Test it, submit it, then check your code below</div></div>
+    <div class="step-list">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">Open CSES Introductory Problems and pick an unsolved one near the top (Missing Number suggested). Write one sentence as a comment describing what it's asking, in your own words.</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">Write the code in Thonny. Test it first with hardcoded values — <code>n = 5</code>, <code>numbers = [1, 2, 4, 5]</code> — and check you get 3 before reading anything from CSES.</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">Once that works, switch to the real input lines: <code>n = int(input())</code> then <code>numbers = list(map(int, input().split()))</code>.</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-text">Test it against the sample on the CSES page, submit it, then check your code below too.</div></div>
     </div>
   </div>
 
@@ -359,6 +391,7 @@ numbers = list(map(int, input().split()))   # the new tool for today -- reads se
     <span>Suggested: Missing Number (Introductory Problems)</span>
     <span>Debugging Toolkit applies here</span>
   </footer>
+
 
 </div>
 
