@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nick — Stage 3 Session 10: Movie Festival (Greedy Interval Scheduling)</title>
+<title>Nick — Stage 3 Session 3: Repetitions (Streak Tracking)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -73,7 +73,6 @@
   .code-right .code-header { background: var(--green-light); color: var(--green); border-bottom: 1px solid var(--green-border); }
   .code-body { background: #22201C; color: #F1EFEA; padding: 14px 16px; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre; }
 
-  /* --- Step 4 additions: hint ladder, common mistakes, advance rule --- */
   .hint-ladder { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
   .hint-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .hint-item summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; color: var(--ink); list-style: none; }
@@ -96,7 +95,6 @@
 
   .doc-footer { margin-top: 60px; padding-top: 18px; border-top: 3px solid var(--ink); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 
-  /* --- interactive additions (Step 3) --- */
   .mode-banner { font-size: 12.5px; font-weight: 600; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; }
   .mode-test { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
   .mode-live { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
@@ -140,10 +138,10 @@
     .box, .diagram-wrap, .check-item, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
     .code-body { background: #FFFFFF !important; color: #000000 !important; border: 1px solid #000000; }
     h1, h2, h3 { color: #000000 !important; }
-    .panel, .mode-banner { display: none; } /* interactive widgets don't belong on a printed page */
+    .panel, .mode-banner { display: none; }
     .hint-item summary::before { content: "" !important; }
     .hint-item summary { cursor: default; }
-    details > *:not(summary) { display: block !important; } /* force hints open on paper */
+    details > *:not(summary) { display: block !important; }
   }
 </style>
 </head>
@@ -151,119 +149,134 @@
 <div class="page">
 
   <header class="doc-header">
-    <div class="eyebrow">Stage 3 · Session 10 · Sorting and Searching — new technique</div>
-    <h1 class="doc-title">Movie Festival — Sort by When Things End, Not When They Start</h1>
+    <div class="eyebrow">Stage 3 · Session 3 · Introductory Problems · Repeatable lesson</div>
+    <h1 class="doc-title">Repetitions — Walking Through a Word One Letter at a Time</h1>
     <div class="meta-row">
-      <span><strong>Last time:</strong> Sum of Two Values — two pointers, closing inward, positions tagged before sorting</span>
-      <span><strong>Today:</strong> a brand new technique — greedy interval scheduling</span>
+      <span><strong>Last time:</strong> Missing Number — the Gauss sum trick instead of checking every number</span>
+      <span><strong>Today:</strong> a new kind of input — a word instead of a list of numbers</span>
     </div>
-    <a class="cses-link" href="https://cses.fi/problemset/task/1629" target="_blank" rel="noopener">Open Movie Festival on CSES ↗</a>
+    <a class="cses-link" href="https://cses.fi/problemset/task/1069" target="_blank" rel="noopener">Open Repetitions on CSES ↗</a>
   </header>
 
   <div class="section">
-    <h2 class="section-title">The problem in plain words</h2>
-    <div class="box box-purple">
-      <div class="box-label">The problem in plain words</div>
-      <p>A festival is showing <code>n</code> movies, one screen, no overlaps allowed. Each movie has a start time and an end time. You want to watch as many <em>whole</em> movies as possible. What's the biggest number of movies you can fit, back to back, with no two overlapping?</p>
-    </div>
-    <p>This is a different shape of problem from anything in Stage 3 so far. It isn't two pointers closing inward on a sorted list — it's a brand new idea called <strong>greedy interval scheduling</strong>: at each step, make the choice that looks best right now, and trust that it stays best all the way to the end.</p>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">The obvious idea — and why it fails</h2>
-    <p>The natural first guess: watch whichever movie starts earliest. That sounds reasonable, but it can trap you.</p>
+    <h2 class="section-title">Today's problem uses words, not numbers</h2>
+    <p>Every problem so far has given you numbers to read. Today's suggested problem, <strong>Repetitions</strong>, gives you a single word made of the letters A, C, G, T — a string. Good news: a string works almost exactly like the lists you already know.</p>
 
     <div class="diagram-wrap">
-      <svg viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
-        <text x="240" y="16" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Picking "earliest start" first can block out everything else</text>
-        <line x1="20" y1="40" x2="460" y2="40" stroke="#DEDAD2" stroke-width="1"/>
-        <rect x="20" y="46" width="400" height="22" rx="4" fill="#FBEEEA" stroke="#E9C1B4"/>
-        <text x="220" y="61" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#A3311E">Movie A: starts 0, ends 10 (picked first — starts earliest)</text>
-        <rect x="60" y="80" width="80" height="22" rx="4" fill="#F1EFEA" stroke="#DEDAD2"/>
-        <text x="100" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#6E6A62">B: 1–2</text>
-        <rect x="220" y="80" width="80" height="22" rx="4" fill="#F1EFEA" stroke="#DEDAD2"/>
-        <text x="260" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#6E6A62">C: 3–4</text>
-        <text x="240" y="122" text-anchor="middle" font-family="DM Sans" font-size="12" fill="#34302A">A overlaps both B and C — pick A first and you're stuck with just 1 movie.</text>
-        <text x="240" y="144" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A6B3C">Skip A, watch B then C instead — that's 2 movies. Earliest-start was the wrong idea.</text>
+      <svg viewBox="0 0 320 130" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="160" y="20" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">A word is just a list of letters</text>
+        <rect x="20" y="35" width="40" height="40" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/>
+        <text x="40" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#2B5FA3">C</text>
+        <text x="40" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#6E6A62">s[0]</text>
+        <rect x="70" y="35" width="40" height="40" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/>
+        <text x="90" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#2B5FA3">A</text>
+        <text x="90" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#6E6A62">s[1]</text>
+        <rect x="120" y="35" width="40" height="40" rx="6" fill="#EAF1FA" stroke="#C3D6EE"/>
+        <text x="140" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#2B5FA3">T</text>
+        <text x="140" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#6E6A62">s[2]</text>
+        <text x="220" y="60" font-family="DM Sans" font-size="12" fill="#34302A">len(s), for letter in s —</text>
+        <text x="220" y="80" font-family="DM Sans" font-size="12" fill="#34302A">same tools as lists</text>
       </svg>
-      <div class="diagram-caption">A long movie that starts early can block out several short ones later — "starts earliest" doesn't protect you from that.</div>
+      <div class="diagram-caption">Indexing, length, and looping all work on strings exactly like they do on lists.</div>
     </div>
   </div>
 
   <div class="section">
-    <h2 class="section-title">The fix: sort by when movies END</h2>
-    <p>What actually matters isn't when a movie starts — it's how much time it leaves free <em>afterward</em>. A movie that ends early leaves the rest of the day wide open, no matter when it started. So: sort every movie by its <strong>end</strong> time, smallest first, and walk through them in that order — taking a movie whenever it starts at or after the end of the last movie you kept.</p>
+    <h2 class="section-title">The new tool: keeping a streak</h2>
+    <p>Repetitions asks: what is the longest run of the <em>same letter in a row</em>? Not the same letter overall — the longest unbroken streak.</p>
+    <p>You already know the pattern this needs. Back in T1 you tracked a champion item using best_item and best_count. This is the same idea, with one twist: you also need a second number for the streak that is happening <em>right now</em>, because it resets every time the letter changes.</p>
 
     <div class="diagram-wrap">
-      <svg viewBox="0 0 480 150" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
-        <text x="240" y="16" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Same three movies, sorted by END time instead</text>
-        <g font-family="JetBrains Mono" font-size="13" font-weight="700">
-          <rect x="20" y="32" width="90" height="30" rx="6" fill="#E9F6EE" stroke="#A9DABE"/><text x="65" y="52" text-anchor="middle" fill="#1A6B3C">B: 1–2</text>
-          <rect x="126" y="32" width="90" height="30" rx="6" fill="#E9F6EE" stroke="#A9DABE"/><text x="171" y="52" text-anchor="middle" fill="#1A6B3C">C: 3–4</text>
-          <rect x="232" y="32" width="90" height="30" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/><text x="277" y="52" text-anchor="middle" fill="#A3311E">A: 0–10</text>
+      <svg viewBox="0 0 500 190" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="250" y="18" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Walking through "AAACCAAA" letter by letter</text>
+        <g font-family="JetBrains Mono" font-size="15" font-weight="700">
+          <rect x="10" y="32" width="42" height="40" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="31" y="57" text-anchor="middle" fill="#1A6B3C">A</text>
+          <rect x="58" y="32" width="42" height="40" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="79" y="57" text-anchor="middle" fill="#1A6B3C">A</text>
+          <rect x="106" y="32" width="42" height="40" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="127" y="57" text-anchor="middle" fill="#1A6B3C">A</text>
+          <rect x="154" y="32" width="42" height="40" rx="5" fill="#FBEEEA" stroke="#E9C1B4"/>
+          <text x="175" y="57" text-anchor="middle" fill="#A3311E">C</text>
+          <rect x="202" y="32" width="42" height="40" rx="5" fill="#FBEEEA" stroke="#E9C1B4"/>
+          <text x="223" y="57" text-anchor="middle" fill="#A3311E">C</text>
+          <rect x="250" y="32" width="42" height="40" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="271" y="57" text-anchor="middle" fill="#1A6B3C">A</text>
+          <rect x="298" y="32" width="42" height="40" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="319" y="57" text-anchor="middle" fill="#1A6B3C">A</text>
+          <rect x="346" y="32" width="42" height="40" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="367" y="57" text-anchor="middle" fill="#1A6B3C">A</text>
         </g>
-        <text x="65" y="78" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#1A6B3C">take (end=2)</text>
-        <text x="171" y="78" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#1A6B3C">3 ≥ 2, take (end=4)</text>
-        <text x="277" y="78" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#A3311E">0 &lt; 4, skip</text>
-        <text x="240" y="112" text-anchor="middle" font-family="DM Sans" font-size="13" font-weight="700" fill="#1A1815">Result: 2 movies (B then C) — matches the answer above</text>
-        <text x="240" y="134" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6E6A62">Sorting by end time never picks A before the shorter ones ever get a chance.</text>
+        <g font-family="JetBrains Mono" font-size="12" fill="#34302A">
+          <text x="31" y="90" text-anchor="middle">1</text>
+          <text x="79" y="90" text-anchor="middle">2</text>
+          <text x="127" y="90" text-anchor="middle">3</text>
+          <text x="175" y="90" text-anchor="middle">1</text>
+          <text x="223" y="90" text-anchor="middle">2</text>
+          <text x="271" y="90" text-anchor="middle">1</text>
+          <text x="319" y="90" text-anchor="middle">2</text>
+          <text x="367" y="90" text-anchor="middle">3</text>
+        </g>
+        <text x="440" y="90" font-family="DM Sans" font-size="10" fill="#6E6A62">current streak</text>
+        <path d="M 154 78 L 154 100" stroke="#A3311E" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <text x="175" y="112" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#A3311E">letter changed — streak resets to 1</text>
+        <path d="M 127 78 L 127 130" stroke="#1A6B3C" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <path d="M 367 78 L 367 130" stroke="#1A6B3C" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <text x="250" y="148" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#1A6B3C" font-weight="700">best streak found so far: 3 (first reached here, tied again here)</text>
+        <text x="250" y="175" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#34302A">two numbers, updated every step: the streak happening right now, and the best one ever seen</text>
       </svg>
-      <div class="diagram-caption">Sorted by end time, the greedy walk naturally prefers movies that leave more room behind them.</div>
+      <div class="diagram-caption">Every letter either continues the streak (add 1) or breaks it (reset to 1) — and every step, check if the current streak beats the best one so far.</div>
     </div>
+
+    <p>Here is the bug almost everyone writes the first time, shown next to the fix:</p>
 
     <div class="code-compare">
       <div class="code-block code-wrong">
-        <div class="code-header">Wrong — sorts by start time, greedy picks in that order</div>
-        <div class="code-body">n = int(input())
-movies = []
-for _ in range(n):
-    a, b = map(int, input().split())
-    movies.append((a, b))
+        <div class="code-header">Wrong — forgot the reset</div>
+        <div class="code-body">s = input()
 
-movies.sort()   # sorts by start time first
+current = 1
+best = 1
+for i in range(1, len(s)):
+    if s[i] == s[i-1]:
+        current += 1
+    # forgot the else!
+    # current never resets
+    if current > best:
+        best = current
 
-count = 0
-last_end = -1
-for a, b in movies:
-    if a >= last_end:
-        count += 1
-        last_end = b
-
-print(count)</div>
+print(best)</div>
       </div>
       <div class="code-block code-right">
-        <div class="code-header">Right — sorts by end time, the new idea for today</div>
-        <div class="code-body">n = int(input())
-movies = []
-for _ in range(n):
-    a, b = map(int, input().split())
-    movies.append((a, b))
+        <div class="code-header">Right — resets on every change</div>
+        <div class="code-body">s = input()
 
-movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
+current = 1
+best = 1
 
-# ...then loop through movies in this order, keeping a tracker for the
-# end time of the last movie you decided to watch (start it very low,
-# like -1, before the loop). For each movie, if its start time is >=
-# that tracker, you can fit it in -- count it, and update the tracker
-# to this movie's end time. You already know how to loop through a
-# list and keep a running count from Coin Piles and Bit Strings --
-# write that part yourself.</div>
+# ...loop through the string starting at index 1 (for i in
+# range(1, len(s))). At each letter, compare it to the one before it
+# (s[i] vs s[i-1]). If they're the same, the streak continues -- add
+# 1 to current. If they're different, the streak just broke -- reset
+# current back to 1. Either way, check if current is now bigger than
+# best, and update best if so. You already know this shape from T1's
+# champion pattern (best_item, best_count) -- write it yourself.</div>
       </div>
     </div>
 
     <div class="box box-plain">
       <div class="box-label">Why this stops short on purpose</div>
-      <p>The new idea today is the sort key, not the loop — you've written "loop through a sorted list, keep a running count" several times already. Paste just the right-hand block on its own and run it: it won't crash, but it won't print anything either. That silence means the counting loop is the part still left for you to write.</p>
+      <p>Without the else, current only ever goes up — it never resets when the letter changes. Paste just the right-hand block on its own and run it: it reads the string and sets up current and best, then stops, printing nothing. That silence means the comparison loop is still left for you to write. This is the kind of bug where making a guess first really pays off: before running it, ask yourself what current should do the moment the letter changes.</p>
     </div>
   </div>
 
   <div class="section">
     <h2 class="section-title">Common mistakes on this one</h2>
     <div class="mistake-list">
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Sorting by <strong>start</strong> time instead of end time — the intuitive guess, and the one that fails on cases like the one above.</div></div>
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Sorting by how <strong>long</strong> each movie is (shortest first) — another common guess, also wrong: a short movie in the wrong spot can still block out more than it saves.</div></div>
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Updating the "last end" tracker on every movie you look at, instead of only the ones you actually decide to keep.</div></div>
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Using <code>&gt;</code> instead of <code>&gt;=</code> when checking if a movie fits — a movie that starts exactly when the last one ends is allowed.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Forgetting the <code>else</code> that resets <code>current</code> back to 1 — the single most common first-try bug on this problem.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Starting the loop at index 0 instead of 1 — comparing <code>s[0]</code> to <code>s[-1]</code> (the last letter) by accident.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Starting <code>current</code> and <code>best</code> at 0 instead of 1 — a single letter is already a streak of length 1.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Using <code>input().split()</code> out of habit — this line is a single word with no spaces, so plain <code>input()</code> is correct and simpler.</div></div>
     </div>
   </div>
 
@@ -273,15 +286,15 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <div class="hint-ladder">
       <details class="hint-item">
         <summary>Hint 1</summary>
-        <div class="hint-body">Look at what you're sorting by right now. Is "starts earliest" really the thing that tells you how much room a movie leaves for the rest of the day — or is there something else about a movie that matters more for that?</div>
+        <div class="hint-body">Before running your code, ask yourself: what should <code>current</code> do the exact moment the letter changes from the one before it?</div>
       </details>
       <details class="hint-item">
         <summary>Hint 2</summary>
-        <div class="hint-body">Try your current code on this by hand: Movie A runs 0 to 10. Movies B and C run 1 to 2 and 3 to 4. If you pick whichever starts earliest, what happens to B and C? What would you need to sort by so A doesn't get picked before them?</div>
+        <div class="hint-body">If your answer is way too big — bigger than the length of the whole string could reasonably suggest for a "streak" — what does that tell you about whether <code>current</code> is ever going back down?</div>
       </details>
       <details class="hint-item">
         <summary>Hint 3</summary>
-        <div class="hint-body">Sort your movies by their <em>end</em> time, smallest first, before doing anything else. Then walk through them in that order and ask, for each one: "does this movie start at or after the end of the last movie I decided to keep?"</div>
+        <div class="hint-body">Add an <code>else</code> branch to your if — when <code>s[i] != s[i-1]</code>, set <code>current = 1</code>. Then still check afterward whether <code>current > best</code>.</div>
       </details>
     </div>
   </div>
@@ -290,15 +303,14 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <h2 class="section-title">Your task</h2>
     <div class="box box-blue">
       <div class="box-label">Suggested target</div>
-      <p>Try <strong>Movie Festival</strong>, the first problem in a new run on greedy interval scheduling. A different pick is fine too — just note in your comment whether it's the same "sort and pick greedily" shape or something else.</p>
+      <p>Try <strong>Repetitions</strong> — it's built exactly for the streak pattern above. If something else on the Introductory list catches your eye instead, that's fine — just check whether it needs this streak idea or something else, and say which in your comment.</p>
     </div>
     <div class="checklist">
-      <div class="check-item"><div class="check-box"></div><div>Open CSES Sorting and Searching, open Movie Festival (or your own pick)</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Open CSES Introductory Problems and open Repetitions (or your own pick)</div></div>
       <div class="check-item"><div class="check-box"></div><div>Write one sentence as a comment at the top describing what the problem is asking, in your own words</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Sort by END time, not start time and not duration</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Walk through the sorted list once, keeping a tracker for the end time of the last movie you kept</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Only count and update the tracker when a movie actually fits</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Test it against the sample, submit it, then check your code below</div></div>
+      <div class="check-item"><div class="check-box"></div><div>This one is a single word on one line, so a plain input() is enough, no split needed</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Use two numbers as you loop: current (the streak happening right now) and best (the biggest one you've seen), with an else that resets current</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Test it, submit it, then check your code below</div></div>
     </div>
   </div>
 
@@ -307,9 +319,9 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <div class="advance-rule">
       <div class="box-label">Advance rule</div>
       <div class="checklist">
-        <div class="check-item"><div class="check-box"></div><div>CSES says ACCEPTED, including the large test cases (n up to 200,000)</div></div>
-        <div class="check-item"><div class="check-box"></div><div>You can say in one sentence why sorting by end time works and sorting by start time doesn't</div></div>
-        <div class="check-item"><div class="check-box"></div><div>You got there without needing Hint 3 above — if you did need it, that's fine, just mention it to your dad so it gets a quick second look next week</div></div>
+        <div class="check-item"><div class="check-box"></div><div>CSES says ACCEPTED on all tests</div></div>
+        <div class="check-item"><div class="check-box"></div><div>You can explain, in one sentence, why the else branch matters — what would happen without it</div></div>
+        <div class="check-item"><div class="check-box"></div><div>You got there without needing Hint 3 above — if you did need it, that's fine, just mention it to your dad</div></div>
       </div>
     </div>
   </div>
@@ -351,7 +363,7 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <p>Same toolkit as always. Guess first, read the error or the failed test carefully, try one fix, print a variable if you're unsure what it holds, search if you need to — and if you're still stuck, ask here.</p>
     <div class="box box-plain">
       <div class="box-label">A trick just for this one</div>
-      <p>If your count looks wrong, print your sorted <code>movies</code> list right after sorting, before the loop. The end times (second number in each pair) should be going up the whole way down the list. If they're not, you sorted by the wrong thing.</p>
+      <p>If current and best aren't matching what you expect, add <code>print(i, s[i], current, best)</code> inside the loop for a moment. Watching the four values change letter by letter will usually show you exactly where it goes wrong. Take the print statement back out before you submit.</p>
     </div>
 
     <div class="panel">
@@ -359,58 +371,44 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
       <div class="chat-log" id="chatLog"></div>
 
       <label for="nickMessageInput">What's going on?</label>
-      <input type="text" id="nickMessageInput" placeholder="e.g. it says WRONG ANSWER on test 8 and I don't see why">
+      <input type="text" id="nickMessageInput" placeholder="e.g. my answer is way too big">
       <button class="action-btn" id="askBtn">Ask for help</button>
       <div id="helpStatus"></div>
     </div>
   </div>
 
   <footer class="doc-footer">
-    <span>Nick Bystrov — Stage 3 · Session 10</span>
-    <span>Suggested: Movie Festival (Sorting and Searching)</span>
+    <span>Nick Bystrov — Stage 3 · Session 3</span>
+    <span>Suggested: Repetitions (Introductory Problems)</span>
     <span>Debugging Toolkit applies here</span>
   </footer>
 
 </div>
 
 <script>
-// ---------------------------------------------------------------------
-// Shared problem context — sent with every /evaluate and /help call.
-// ---------------------------------------------------------------------
 const PROBLEM_CONTEXT = {
-  problem_id: "cses-1629",
-  problem_title: "Movie Festival",
-  intended_method: "sort movies by end time ascending, then greedily keep a movie whenever its start time is >= the end time of the last movie kept",
+  problem_id: "cses-1069",
+  problem_title: "Repetitions",
+  intended_method: "loop through the string from index 1, comparing s[i] to s[i-1]: same -> current += 1, different -> current = 1 (reset), and update best = max(best, current) every step; current and best both start at 1",
   accept_criteria: [
-    "reads n, then n lines of (start, end)",
-    "sorts by END time, not start time and not duration",
-    "greedily counts a movie only if its start >= the end of the last movie taken",
-    "runs within time limits at n = 2e5 (O(n log n), not O(n^2))"
+    "reads the string with plain input(), no split needed",
+    "loops from index 1 to len(s)-1",
+    "correctly resets current to 1 on a letter change (the else branch)",
+    "current and best both initialized to 1, not 0",
+    "prints best (the longest streak)"
   ],
-  taught_recently: ["greedy interval scheduling (sort by end time, keep if it fits)"],
+  taught_recently: ["this is the first strings-as-sequences session -- new concept, framed as an extension of T1's champion pattern (best_item/best_count) from Stage 2"],
   learner_context: [
     "11 years old, works alone, Python in Thonny",
-    "just finished three sessions of two-pointer technique (Apartments, Ferris Wheel, Sum of Two Values)",
-    "this is his first exposure to greedy interval scheduling -- a brand new technique, not an extension of two pointers",
-    "common wrong guesses to watch for: sorting by start time, or sorting by movie duration"
+    "just finished Missing Number (list(map(int, input().split())) plus the Gauss sum trick)",
+    "this session is a retrospective/repeat lesson -- Nick may be returning to review a technique he's already covered, not necessarily seeing it for the first time",
+    "common wrong guess to watch for: forgetting the else branch that resets current back to 1 on a letter change -- the single most common first-try bug on this problem"
   ]
 };
 
-// ---------------------------------------------------------------------
-// Deployment switch. Fill WORKER_BASE_URL in once the Cloudflare Worker
-// is deployed (see ../SETUP.md) — e.g. "https://nick-cp-tutor.alex123.workers.dev".
-// Until then, this file runs in TEST MODE: it calls Claude directly
-// through this artifact's own API bridge, which only works while this
-// file is open inside a Claude conversation — NOT once it's hosted on
-// GitHub Pages. Once WORKER_BASE_URL is filled in, every request routes
-// through the real Worker instead, which is what makes this work once
-// deployed for real, unattended, on a weekday.
-// ---------------------------------------------------------------------
 const WORKER_BASE_URL = "https://nick-cp-tutor.abystrov66.workers.dev";
 const IS_TEST_MODE = WORKER_BASE_URL === "REPLACE_WITH_YOUR_WORKER_URL";
 
-// Test-mode-only: identical prompts/schemas to worker/index.js, used to
-// call Claude directly when no Worker URL has been configured yet.
 const EVALUATE_SYSTEM_PROMPT = `You are the evaluator for a single 11-year-old learning competitive
 programming alone in Python, preparing for USACO Bronze. You judge one
 submission and return one JSON object. You never speak to the child except
@@ -584,19 +582,6 @@ const HELP_TOOL = {
   }
 };
 
-// ---------------------------------------------------------------------
-// State. Two different environments need two different mechanisms:
-//   - Inside a Claude artifact preview, browser localStorage is blocked
-//     entirely — Claude artifacts use window.storage instead.
-//   - Once actually deployed on GitHub Pages, window.storage won't exist
-//     (it's a Claude.ai artifact-platform feature, not a web standard),
-//     but real localStorage works fine there — which is the architecture
-//     Section 3 actually specifies for the deployed site.
-// Feature-detect which one is available and use that, with real error
-// handling throughout (a previous version had none on save, which meant
-// a blocked write threw silently and killed every button click before
-// anything else in the handler ran).
-// ---------------------------------------------------------------------
 const STATE_KEY = "nick_cp_tutor:" + PROBLEM_CONTEXT.problem_id;
 const DEFAULT_STATE = { currentCode: "", lastVerdict: null, attemptCount: 0, helpConversation: [], hintsGiven: 0 };
 
@@ -633,13 +618,6 @@ async function saveState(state) {
 
 let state = Object.assign({}, DEFAULT_STATE);
 
-// ---------------------------------------------------------------------
-// Anthropic call helpers — retry once if the tool isn't invoked, then
-// surface a clear error rather than guessing at malformed output.
-// Same evaluate/help model split as worker/index.js — see that file for
-// why: /evaluate is a mechanical classification task Haiku handles well,
-// /help needs a stronger model for the subtler "how much to reveal" call.
-// ---------------------------------------------------------------------
 const MODEL_EVALUATE_TEST_MODE = "claude-haiku-4-5-20251001";
 const MODEL_HELP_TEST_MODE = "claude-sonnet-5";
 
@@ -686,9 +664,6 @@ async function callWorker(path, envelope) {
   return data;
 }
 
-// Same safeguards as worker/index.js — kept in sync so TEST MODE previews
-// behave the same as the deployed Worker. See that file for the reasoning
-// and the failures these caught during testing.
 function opensWithQuestion(text) {
   if (!text) return false;
   const trimmed = text.trim();
@@ -745,9 +720,6 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ---------------------------------------------------------------------
-// Rendering
-// ---------------------------------------------------------------------
 function renderModeBanner() {
   const el = document.getElementById('modeBanner');
   if (IS_TEST_MODE) {
@@ -789,9 +761,6 @@ function renderChat() {
   el.scrollTop = el.scrollHeight;
 }
 
-// ---------------------------------------------------------------------
-// Actions
-// ---------------------------------------------------------------------
 async function handleCheckCode() {
   const btn = document.getElementById('checkBtn');
   const code = document.getElementById('codeInput').value;
@@ -868,9 +837,6 @@ async function handleAskForHelp() {
   }
 }
 
-// ---------------------------------------------------------------------
-// Init
-// ---------------------------------------------------------------------
 async function init() {
   state = await loadState();
   renderModeBanner();
@@ -886,7 +852,7 @@ async function init() {
   });
   document.getElementById('codeInput').addEventListener('change', () => {
     state.currentCode = document.getElementById('codeInput').value;
-    saveState(state); // best-effort background save, not blocking the UI
+    saveState(state);
   });
 }
 

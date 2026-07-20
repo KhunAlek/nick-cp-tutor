@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nick — Stage 3 Session 10: Movie Festival (Greedy Interval Scheduling)</title>
+<title>Nick — Stage 3 Session 7: Apartments (Two Pointers, Same Direction)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -73,7 +73,6 @@
   .code-right .code-header { background: var(--green-light); color: var(--green); border-bottom: 1px solid var(--green-border); }
   .code-body { background: #22201C; color: #F1EFEA; padding: 14px 16px; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre; }
 
-  /* --- Step 4 additions: hint ladder, common mistakes, advance rule --- */
   .hint-ladder { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
   .hint-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .hint-item summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; color: var(--ink); list-style: none; }
@@ -96,7 +95,6 @@
 
   .doc-footer { margin-top: 60px; padding-top: 18px; border-top: 3px solid var(--ink); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 
-  /* --- interactive additions (Step 3) --- */
   .mode-banner { font-size: 12.5px; font-weight: 600; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; }
   .mode-test { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
   .mode-live { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
@@ -140,10 +138,10 @@
     .box, .diagram-wrap, .check-item, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
     .code-body { background: #FFFFFF !important; color: #000000 !important; border: 1px solid #000000; }
     h1, h2, h3 { color: #000000 !important; }
-    .panel, .mode-banner { display: none; } /* interactive widgets don't belong on a printed page */
+    .panel, .mode-banner { display: none; }
     .hint-item summary::before { content: "" !important; }
     .hint-item summary { cursor: default; }
-    details > *:not(summary) { display: block !important; } /* force hints open on paper */
+    details > *:not(summary) { display: block !important; }
   }
 </style>
 </head>
@@ -151,119 +149,118 @@
 <div class="page">
 
   <header class="doc-header">
-    <div class="eyebrow">Stage 3 · Session 10 · Sorting and Searching — new technique</div>
-    <h1 class="doc-title">Movie Festival — Sort by When Things End, Not When They Start</h1>
+    <div class="eyebrow">Stage 3 · Session 7 · New section: Sorting and Searching · Repeatable lesson</div>
+    <h1 class="doc-title">Apartments — Matching Two Lists Without Checking Every Pair</h1>
     <div class="meta-row">
-      <span><strong>Last time:</strong> Sum of Two Values — two pointers, closing inward, positions tagged before sorting</span>
-      <span><strong>Today:</strong> a brand new technique — greedy interval scheduling</span>
+      <span><strong>Last time:</strong> Bit Strings — huge answers, kept small with pow(2, n, MOD)</span>
+      <span><strong>Today:</strong> a brand new toolbox, and the first tool in it</span>
     </div>
-    <a class="cses-link" href="https://cses.fi/problemset/task/1629" target="_blank" rel="noopener">Open Movie Festival on CSES ↗</a>
+    <a class="cses-link" href="https://cses.fi/problemset/task/1084" target="_blank" rel="noopener">Open Apartments on CSES ↗</a>
   </header>
 
-  <div class="section">
-    <h2 class="section-title">The problem in plain words</h2>
-    <div class="box box-purple">
-      <div class="box-label">The problem in plain words</div>
-      <p>A festival is showing <code>n</code> movies, one screen, no overlaps allowed. Each movie has a start time and an end time. You want to watch as many <em>whole</em> movies as possible. What's the biggest number of movies you can fit, back to back, with no two overlapping?</p>
-    </div>
-    <p>This is a different shape of problem from anything in Stage 3 so far. It isn't two pointers closing inward on a sorted list — it's a brand new idea called <strong>greedy interval scheduling</strong>: at each step, make the choice that looks best right now, and trust that it stays best all the way to the end.</p>
+  <div class="box box-purple">
+    <div class="box-label">Quick heads up before we start</div>
+    <p>Every session so far has come from a CSES folder called Introductory Problems. Today you're moving into a new folder called <strong>Sorting and Searching</strong> — you've actually already touched it without knowing, since Distinct Numbers turned out to secretly live there too. This folder is where the real reusable tricks start, and two pointers is the first one.</p>
   </div>
 
   <div class="section">
-    <h2 class="section-title">The obvious idea — and why it fails</h2>
-    <p>The natural first guess: watch whichever movie starts earliest. That sounds reasonable, but it can trap you.</p>
-
-    <div class="diagram-wrap">
-      <svg viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
-        <text x="240" y="16" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Picking "earliest start" first can block out everything else</text>
-        <line x1="20" y1="40" x2="460" y2="40" stroke="#DEDAD2" stroke-width="1"/>
-        <rect x="20" y="46" width="400" height="22" rx="4" fill="#FBEEEA" stroke="#E9C1B4"/>
-        <text x="220" y="61" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#A3311E">Movie A: starts 0, ends 10 (picked first — starts earliest)</text>
-        <rect x="60" y="80" width="80" height="22" rx="4" fill="#F1EFEA" stroke="#DEDAD2"/>
-        <text x="100" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#6E6A62">B: 1–2</text>
-        <rect x="220" y="80" width="80" height="22" rx="4" fill="#F1EFEA" stroke="#DEDAD2"/>
-        <text x="260" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#6E6A62">C: 3–4</text>
-        <text x="240" y="122" text-anchor="middle" font-family="DM Sans" font-size="12" fill="#34302A">A overlaps both B and C — pick A first and you're stuck with just 1 movie.</text>
-        <text x="240" y="144" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A6B3C">Skip A, watch B then C instead — that's 2 movies. Earliest-start was the wrong idea.</text>
-      </svg>
-      <div class="diagram-caption">A long movie that starts early can block out several short ones later — "starts earliest" doesn't protect you from that.</div>
-    </div>
+    <h2 class="section-title">A new shape of problem: matching two separate groups</h2>
+    <p>Every problem so far has given you <em>one</em> list to think about. Today's problem, <strong>Apartments</strong>, gives you <em>two</em> lists that need to be paired up. One list is a group of applicants, each wanting an apartment close to a certain size. The other list is the apartments that actually exist, each with its own size. Your job: match as many applicants to apartments as you can, where "close enough" means the sizes differ by at most some allowed amount, k. Each apartment can only go to one applicant, and each applicant only gets one apartment.</p>
   </div>
 
   <div class="section">
-    <h2 class="section-title">The fix: sort by when movies END</h2>
-    <p>What actually matters isn't when a movie starts — it's how much time it leaves free <em>afterward</em>. A movie that ends early leaves the rest of the day wide open, no matter when it started. So: sort every movie by its <strong>end</strong> time, smallest first, and walk through them in that order — taking a movie whenever it starts at or after the end of the last movie you kept.</p>
-
-    <div class="diagram-wrap">
-      <svg viewBox="0 0 480 150" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
-        <text x="240" y="16" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Same three movies, sorted by END time instead</text>
-        <g font-family="JetBrains Mono" font-size="13" font-weight="700">
-          <rect x="20" y="32" width="90" height="30" rx="6" fill="#E9F6EE" stroke="#A9DABE"/><text x="65" y="52" text-anchor="middle" fill="#1A6B3C">B: 1–2</text>
-          <rect x="126" y="32" width="90" height="30" rx="6" fill="#E9F6EE" stroke="#A9DABE"/><text x="171" y="52" text-anchor="middle" fill="#1A6B3C">C: 3–4</text>
-          <rect x="232" y="32" width="90" height="30" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/><text x="277" y="52" text-anchor="middle" fill="#A3311E">A: 0–10</text>
-        </g>
-        <text x="65" y="78" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#1A6B3C">take (end=2)</text>
-        <text x="171" y="78" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#1A6B3C">3 ≥ 2, take (end=4)</text>
-        <text x="277" y="78" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#A3311E">0 &lt; 4, skip</text>
-        <text x="240" y="112" text-anchor="middle" font-family="DM Sans" font-size="13" font-weight="700" fill="#1A1815">Result: 2 movies (B then C) — matches the answer above</text>
-        <text x="240" y="134" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6E6A62">Sorting by end time never picks A before the shorter ones ever get a chance.</text>
-      </svg>
-      <div class="diagram-caption">Sorted by end time, the greedy walk naturally prefers movies that leave more room behind them.</div>
-    </div>
+    <h2 class="section-title">Why checking every pair is too slow</h2>
+    <p>The obvious idea: for every applicant, scan through every apartment to find one close enough that isn't already taken. With up to 200,000 of each, that's up to 40 billion comparisons. Far too slow.</p>
 
     <div class="code-compare">
       <div class="code-block code-wrong">
-        <div class="code-header">Wrong — sorts by start time, greedy picks in that order</div>
-        <div class="code-body">n = int(input())
-movies = []
-for _ in range(n):
-    a, b = map(int, input().split())
-    movies.append((a, b))
+        <div class="code-header">Wrong — correct, but far too slow</div>
+        <div class="code-body">n, m, k = map(int, input().split())
+desired = list(map(int, input().split()))
+apartments = list(map(int, input().split()))
 
-movies.sort()   # sorts by start time first
-
+used = [False] * m
 count = 0
-last_end = -1
-for a, b in movies:
-    if a >= last_end:
-        count += 1
-        last_end = b
+for i in range(n):
+    for j in range(m):
+        if not used[j] and abs(apartments[j] - desired[i]) &lt;= k:
+            used[j] = True
+            count += 1
+            break
 
-print(count)</div>
+print(count)
+# gives the right answer on small tests
+# but with 200,000 of each, this checks
+# up to 40 billion pairs. Times out.</div>
       </div>
       <div class="code-block code-right">
-        <div class="code-header">Right — sorts by end time, the new idea for today</div>
-        <div class="code-body">n = int(input())
-movies = []
-for _ in range(n):
-    a, b = map(int, input().split())
-    movies.append((a, b))
+        <div class="code-header">Right — sort first, then walk once</div>
+        <div class="code-body">n, m, k = map(int, input().split())
+desired = list(map(int, input().split()))
+apartments = list(map(int, input().split()))
 
-movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
+desired.sort()      # sort both lists first -- the new idea today
+apartments.sort()
 
-# ...then loop through movies in this order, keeping a tracker for the
-# end time of the last movie you decided to watch (start it very low,
-# like -1, before the loop). For each movie, if its start time is >=
-# that tracker, you can fit it in -- count it, and update the tracker
-# to this movie's end time. You already know how to loop through a
-# list and keep a running count from Coin Piles and Bit Strings --
-# write that part yourself.</div>
+i = 0
+j = 0
+count = 0
+
+# ...loop while i &lt; n and j &lt; m. Compare apartments[j] to desired[i]:
+# if the apartment is too small (apartments[j] &lt; desired[i] - k), move
+# j forward. If it's too big (apartments[j] &gt; desired[i] + k), move i
+# forward. Otherwise it's close enough -- count it, and move BOTH i
+# and j forward. You already know how to write a while loop with an
+# if/elif/else inside -- write that part yourself.</div>
       </div>
     </div>
 
     <div class="box box-plain">
-      <div class="box-label">Why this stops short on purpose</div>
-      <p>The new idea today is the sort key, not the loop — you've written "loop through a sorted list, keep a running count" several times already. Paste just the right-hand block on its own and run it: it won't crash, but it won't print anything either. That silence means the counting loop is the part still left for you to write.</p>
+      <div class="box-label">The new tool: two pointers</div>
+      <p><code>i</code> and <code>j</code> are called <strong>pointers</strong> — they're just plain variables that hold a position in a list, exactly like the index you already use in <code>for i in range(len(s))</code>. What's new is having <em>two</em> of them, each walking through its own sorted list, and only ever moving forward — never back. Paste just the right-hand block on its own and run it: it sorts both lists and sets up the pointers, then stops, printing nothing. That silence means the walking loop is still left for you to write.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">How the two pointers actually move</h2>
+    <p>Sort both lists first — this step matters as much as the loop itself. Then at every step there are exactly three possibilities, using the real Apartments sample: desired sizes 45, 60, 60, 80 (sorted), apartments 30, 60, 75 (sorted), k = 5.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="240" y="16" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Three cases, one at a time</text>
+        <rect x="10" y="26" width="145" height="70" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/>
+        <text x="82" y="42" text-anchor="middle" font-family="DM Sans" font-size="11" font-weight="700" fill="#A3311E">Apartment too small</text>
+        <text x="82" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#34302A">apt 30 &lt; want 45 - 5</text>
+        <text x="82" y="78" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#A3311E">move j forward →</text>
+        <rect x="167" y="26" width="145" height="70" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/>
+        <text x="239" y="42" text-anchor="middle" font-family="DM Sans" font-size="11" font-weight="700" fill="#A3311E">Apartment too big</text>
+        <text x="239" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#34302A">apt 60 &gt; want 45 + 5</text>
+        <text x="239" y="78" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#A3311E">move i forward →</text>
+        <rect x="324" y="26" width="145" height="70" rx="6" fill="#E9F6EE" stroke="#A9DABE"/>
+        <text x="396" y="42" text-anchor="middle" font-family="DM Sans" font-size="11" font-weight="700" fill="#1A6B3C">Close enough — match!</text>
+        <text x="396" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#34302A">apt 60, want 60</text>
+        <text x="396" y="78" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#1A6B3C">count+=1, move both →</text>
+        <text x="240" y="120" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6E6A62">Walking the real sample: desired [45, 60, 60, 80] vs apartments [30, 60, 75], k = 5</text>
+        <g font-family="JetBrains Mono" font-size="12">
+          <text x="20" y="145" fill="#34302A">step 1: apt 30 vs want 45</text><text x="230" y="145" fill="#A3311E">too small → j++</text>
+          <text x="20" y="165" fill="#34302A">step 2: apt 60 vs want 45</text><text x="230" y="165" fill="#A3311E">too big → i++</text>
+          <text x="20" y="185" fill="#34302A">step 3: apt 60 vs want 60</text><text x="230" y="185" fill="#1A6B3C">match! count = 1</text>
+          <text x="20" y="205" fill="#34302A">step 4: apt 75 vs want 60</text><text x="230" y="205" fill="#A3311E">too big → i++</text>
+          <text x="20" y="225" fill="#34302A">step 5: apt 75 vs want 80</text><text x="230" y="225" fill="#1A6B3C">match! count = 2</text>
+        </g>
+        <text x="240" y="250" text-anchor="middle" font-family="DM Sans" font-size="11" font-weight="700" fill="#1A1815">final answer: 2 — matches the real CSES sample output</text>
+      </svg>
+      <div class="diagram-caption">Every step does exactly one comparison and moves exactly one or two pointers forward. Nothing is ever revisited.</div>
     </div>
   </div>
 
   <div class="section">
     <h2 class="section-title">Common mistakes on this one</h2>
     <div class="mistake-list">
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Sorting by <strong>start</strong> time instead of end time — the intuitive guess, and the one that fails on cases like the one above.</div></div>
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Sorting by how <strong>long</strong> each movie is (shortest first) — another common guess, also wrong: a short movie in the wrong spot can still block out more than it saves.</div></div>
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Updating the "last end" tracker on every movie you look at, instead of only the ones you actually decide to keep.</div></div>
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Using <code>&gt;</code> instead of <code>&gt;=</code> when checking if a movie fits — a movie that starts exactly when the last one ends is allowed.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Forgetting to sort BOTH lists before the loop — a two-pointer loop on unsorted lists doesn't crash, it just quietly gives a wrong number.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Mixing up which pointer moves for "too small" vs "too big" — it's easy to swap <code>i</code> and <code>j</code> by accident.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Forgetting to move BOTH pointers on a match — moving only one means an apartment or applicant could get reused.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Using strict <code>&lt;</code>/<code>&gt;</code> instead of checking against <code>desired[i] - k</code> and <code>desired[i] + k</code> exactly — an off-by-k error here silently rejects valid matches.</div></div>
     </div>
   </div>
 
@@ -273,15 +270,15 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <div class="hint-ladder">
       <details class="hint-item">
         <summary>Hint 1</summary>
-        <div class="hint-body">Look at what you're sorting by right now. Is "starts earliest" really the thing that tells you how much room a movie leaves for the rest of the day — or is there something else about a movie that matters more for that?</div>
+        <div class="hint-body">If your answer keeps coming out as 0, what's the very first thing you'd want to check about the two lists before the loop even starts?</div>
       </details>
       <details class="hint-item">
         <summary>Hint 2</summary>
-        <div class="hint-body">Try your current code on this by hand: Movie A runs 0 to 10. Movies B and C run 1 to 2 and 3 to 4. If you pick whichever starts earliest, what happens to B and C? What would you need to sort by so A doesn't get picked before them?</div>
+        <div class="hint-body">At each step, you're comparing one apartment to one desired size. What are the only three things that comparison could tell you — and does each of those three need a different pointer to move?</div>
       </details>
       <details class="hint-item">
         <summary>Hint 3</summary>
-        <div class="hint-body">Sort your movies by their <em>end</em> time, smallest first, before doing anything else. Then walk through them in that order and ask, for each one: "does this movie start at or after the end of the last movie I decided to keep?"</div>
+        <div class="hint-body">Print <code>i</code>, <code>j</code>, <code>desired[i]</code>, and <code>apartments[j]</code> once per loop iteration. Watching them change step by step — which one moves, and when — usually makes it clear which branch is behaving unexpectedly.</div>
       </details>
     </div>
   </div>
@@ -290,15 +287,14 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <h2 class="section-title">Your task</h2>
     <div class="box box-blue">
       <div class="box-label">Suggested target</div>
-      <p>Try <strong>Movie Festival</strong>, the first problem in a new run on greedy interval scheduling. A different pick is fine too — just note in your comment whether it's the same "sort and pick greedily" shape or something else.</p>
+      <p>Try <strong>Apartments</strong>, in the Sorting and Searching section on CSES — it's built exactly for the two-pointer idea above. A different pick is fine too, just note in your comment whether it needs two pointers or a different approach.</p>
     </div>
     <div class="checklist">
-      <div class="check-item"><div class="check-box"></div><div>Open CSES Sorting and Searching, open Movie Festival (or your own pick)</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Open CSES, go to Sorting and Searching, open Apartments (or your own pick)</div></div>
       <div class="check-item"><div class="check-box"></div><div>Write one sentence as a comment at the top describing what the problem is asking, in your own words</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Sort by END time, not start time and not duration</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Walk through the sorted list once, keeping a tracker for the end time of the last movie you kept</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Only count and update the tracker when a movie actually fits</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Test it against the sample, submit it, then check your code below</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Sort both lists — desired.sort() and apartments.sort() — before the loop starts</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Walk both lists with two pointers i and j: apartment too small → move j, apartment too big → move i, otherwise match, move both and add 1 to count</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Test it against the sample on the problem page, submit it, then check your code below</div></div>
     </div>
   </div>
 
@@ -307,9 +303,9 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <div class="advance-rule">
       <div class="box-label">Advance rule</div>
       <div class="checklist">
-        <div class="check-item"><div class="check-box"></div><div>CSES says ACCEPTED, including the large test cases (n up to 200,000)</div></div>
-        <div class="check-item"><div class="check-box"></div><div>You can say in one sentence why sorting by end time works and sorting by start time doesn't</div></div>
-        <div class="check-item"><div class="check-box"></div><div>You got there without needing Hint 3 above — if you did need it, that's fine, just mention it to your dad so it gets a quick second look next week</div></div>
+        <div class="check-item"><div class="check-box"></div><div>CSES says ACCEPTED, including the large test cases (n, m up to 200,000)</div></div>
+        <div class="check-item"><div class="check-box"></div><div>You can explain, in one sentence, why sorting first lets each pointer only ever move forward</div></div>
+        <div class="check-item"><div class="check-box"></div><div>You got there without needing Hint 3 above — if you did need it, that's fine, just mention it to your dad</div></div>
       </div>
     </div>
   </div>
@@ -350,8 +346,8 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <h2 class="section-title">If you get stuck</h2>
     <p>Same toolkit as always. Guess first, read the error or the failed test carefully, try one fix, print a variable if you're unsure what it holds, search if you need to — and if you're still stuck, ask here.</p>
     <div class="box box-plain">
-      <div class="box-label">A trick just for this one</div>
-      <p>If your count looks wrong, print your sorted <code>movies</code> list right after sorting, before the loop. The end times (second number in each pair) should be going up the whole way down the list. If they're not, you sorted by the wrong thing.</p>
+      <div class="box-label">Two tricks just for this one</div>
+      <p>If your answer keeps coming out as 0, the very first thing to check is whether you actually called <code>.sort()</code> on both lists before the loop. And if you're not sure why a pointer moved the way it did, print <code>i</code>, <code>j</code>, <code>desired[i]</code>, and <code>apartments[j]</code> once per loop — watching them change line by line makes the three cases from this lesson click into place.</p>
     </div>
 
     <div class="panel">
@@ -359,58 +355,44 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
       <div class="chat-log" id="chatLog"></div>
 
       <label for="nickMessageInput">What's going on?</label>
-      <input type="text" id="nickMessageInput" placeholder="e.g. it says WRONG ANSWER on test 8 and I don't see why">
+      <input type="text" id="nickMessageInput" placeholder="e.g. my gondola count is one too many">
       <button class="action-btn" id="askBtn">Ask for help</button>
       <div id="helpStatus"></div>
     </div>
   </div>
 
   <footer class="doc-footer">
-    <span>Nick Bystrov — Stage 3 · Session 10</span>
-    <span>Suggested: Movie Festival (Sorting and Searching)</span>
+    <span>Nick Bystrov — Stage 3 · Session 7</span>
+    <span>Suggested: Apartments (Sorting and Searching)</span>
     <span>Debugging Toolkit applies here</span>
   </footer>
 
 </div>
 
 <script>
-// ---------------------------------------------------------------------
-// Shared problem context — sent with every /evaluate and /help call.
-// ---------------------------------------------------------------------
 const PROBLEM_CONTEXT = {
-  problem_id: "cses-1629",
-  problem_title: "Movie Festival",
-  intended_method: "sort movies by end time ascending, then greedily keep a movie whenever its start time is >= the end time of the last movie kept",
+  problem_id: "cses-1084",
+  problem_title: "Apartments",
+  intended_method: "sort both desired and apartments lists, then two pointers i and j marching forward only: apartment too small -> move j, too big -> move i, otherwise match (count and move both)",
   accept_criteria: [
-    "reads n, then n lines of (start, end)",
-    "sorts by END time, not start time and not duration",
-    "greedily counts a movie only if its start >= the end of the last movie taken",
-    "runs within time limits at n = 2e5 (O(n log n), not O(n^2))"
+    "reads n, m, k, then the desired sizes and apartment sizes",
+    "sorts BOTH lists before the loop",
+    "walks with two pointers that only ever move forward, never back",
+    "correctly handles all three cases: too small, too big, match",
+    "runs within time limits at n, m = 2e5 (O(n log n), not O(n*m))"
   ],
-  taught_recently: ["greedy interval scheduling (sort by end time, keep if it fits)"],
+  taught_recently: ["this is the first two-pointer session -- brand new technique, first tool in the Sorting and Searching toolbox"],
   learner_context: [
     "11 years old, works alone, Python in Thonny",
-    "just finished three sessions of two-pointer technique (Apartments, Ferris Wheel, Sum of Two Values)",
-    "this is his first exposure to greedy interval scheduling -- a brand new technique, not an extension of two pointers",
-    "common wrong guesses to watch for: sorting by start time, or sorting by movie duration"
+    "just finished Bit Strings (modular exponentiation) -- this session is a shift into a new CSES section entirely",
+    "this session is a retrospective/repeat lesson -- Nick may be returning to review a technique he's already covered, not necessarily seeing it for the first time",
+    "common wrong guess to watch for: forgetting to sort one or both lists before the loop"
   ]
 };
 
-// ---------------------------------------------------------------------
-// Deployment switch. Fill WORKER_BASE_URL in once the Cloudflare Worker
-// is deployed (see ../SETUP.md) — e.g. "https://nick-cp-tutor.alex123.workers.dev".
-// Until then, this file runs in TEST MODE: it calls Claude directly
-// through this artifact's own API bridge, which only works while this
-// file is open inside a Claude conversation — NOT once it's hosted on
-// GitHub Pages. Once WORKER_BASE_URL is filled in, every request routes
-// through the real Worker instead, which is what makes this work once
-// deployed for real, unattended, on a weekday.
-// ---------------------------------------------------------------------
 const WORKER_BASE_URL = "https://nick-cp-tutor.abystrov66.workers.dev";
 const IS_TEST_MODE = WORKER_BASE_URL === "REPLACE_WITH_YOUR_WORKER_URL";
 
-// Test-mode-only: identical prompts/schemas to worker/index.js, used to
-// call Claude directly when no Worker URL has been configured yet.
 const EVALUATE_SYSTEM_PROMPT = `You are the evaluator for a single 11-year-old learning competitive
 programming alone in Python, preparing for USACO Bronze. You judge one
 submission and return one JSON object. You never speak to the child except
@@ -584,19 +566,6 @@ const HELP_TOOL = {
   }
 };
 
-// ---------------------------------------------------------------------
-// State. Two different environments need two different mechanisms:
-//   - Inside a Claude artifact preview, browser localStorage is blocked
-//     entirely — Claude artifacts use window.storage instead.
-//   - Once actually deployed on GitHub Pages, window.storage won't exist
-//     (it's a Claude.ai artifact-platform feature, not a web standard),
-//     but real localStorage works fine there — which is the architecture
-//     Section 3 actually specifies for the deployed site.
-// Feature-detect which one is available and use that, with real error
-// handling throughout (a previous version had none on save, which meant
-// a blocked write threw silently and killed every button click before
-// anything else in the handler ran).
-// ---------------------------------------------------------------------
 const STATE_KEY = "nick_cp_tutor:" + PROBLEM_CONTEXT.problem_id;
 const DEFAULT_STATE = { currentCode: "", lastVerdict: null, attemptCount: 0, helpConversation: [], hintsGiven: 0 };
 
@@ -633,13 +602,6 @@ async function saveState(state) {
 
 let state = Object.assign({}, DEFAULT_STATE);
 
-// ---------------------------------------------------------------------
-// Anthropic call helpers — retry once if the tool isn't invoked, then
-// surface a clear error rather than guessing at malformed output.
-// Same evaluate/help model split as worker/index.js — see that file for
-// why: /evaluate is a mechanical classification task Haiku handles well,
-// /help needs a stronger model for the subtler "how much to reveal" call.
-// ---------------------------------------------------------------------
 const MODEL_EVALUATE_TEST_MODE = "claude-haiku-4-5-20251001";
 const MODEL_HELP_TEST_MODE = "claude-sonnet-5";
 
@@ -686,9 +648,6 @@ async function callWorker(path, envelope) {
   return data;
 }
 
-// Same safeguards as worker/index.js — kept in sync so TEST MODE previews
-// behave the same as the deployed Worker. See that file for the reasoning
-// and the failures these caught during testing.
 function opensWithQuestion(text) {
   if (!text) return false;
   const trimmed = text.trim();
@@ -745,9 +704,6 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ---------------------------------------------------------------------
-// Rendering
-// ---------------------------------------------------------------------
 function renderModeBanner() {
   const el = document.getElementById('modeBanner');
   if (IS_TEST_MODE) {
@@ -789,9 +745,6 @@ function renderChat() {
   el.scrollTop = el.scrollHeight;
 }
 
-// ---------------------------------------------------------------------
-// Actions
-// ---------------------------------------------------------------------
 async function handleCheckCode() {
   const btn = document.getElementById('checkBtn');
   const code = document.getElementById('codeInput').value;
@@ -868,9 +821,6 @@ async function handleAskForHelp() {
   }
 }
 
-// ---------------------------------------------------------------------
-// Init
-// ---------------------------------------------------------------------
 async function init() {
   state = await loadState();
   renderModeBanner();
@@ -886,7 +836,7 @@ async function init() {
   });
   document.getElementById('codeInput').addEventListener('change', () => {
     state.currentCode = document.getElementById('codeInput').value;
-    saveState(state); // best-effort background save, not blocking the UI
+    saveState(state);
   });
 }
 

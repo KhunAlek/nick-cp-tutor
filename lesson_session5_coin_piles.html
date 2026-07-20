@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nick — Stage 3 Session 10: Movie Festival (Greedy Interval Scheduling)</title>
+<title>Nick — Stage 3 Session 5: Coin Piles (Multi-Query Loops)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -73,7 +73,6 @@
   .code-right .code-header { background: var(--green-light); color: var(--green); border-bottom: 1px solid var(--green-border); }
   .code-body { background: #22201C; color: #F1EFEA; padding: 14px 16px; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre; }
 
-  /* --- Step 4 additions: hint ladder, common mistakes, advance rule --- */
   .hint-ladder { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
   .hint-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .hint-item summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; color: var(--ink); list-style: none; }
@@ -96,7 +95,6 @@
 
   .doc-footer { margin-top: 60px; padding-top: 18px; border-top: 3px solid var(--ink); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 
-  /* --- interactive additions (Step 3) --- */
   .mode-banner { font-size: 12.5px; font-weight: 600; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; }
   .mode-test { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
   .mode-live { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
@@ -140,10 +138,10 @@
     .box, .diagram-wrap, .check-item, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
     .code-body { background: #FFFFFF !important; color: #000000 !important; border: 1px solid #000000; }
     h1, h2, h3 { color: #000000 !important; }
-    .panel, .mode-banner { display: none; } /* interactive widgets don't belong on a printed page */
+    .panel, .mode-banner { display: none; }
     .hint-item summary::before { content: "" !important; }
     .hint-item summary { cursor: default; }
-    details > *:not(summary) { display: block !important; } /* force hints open on paper */
+    details > *:not(summary) { display: block !important; }
   }
 </style>
 </head>
@@ -151,119 +149,121 @@
 <div class="page">
 
   <header class="doc-header">
-    <div class="eyebrow">Stage 3 · Session 10 · Sorting and Searching — new technique</div>
-    <h1 class="doc-title">Movie Festival — Sort by When Things End, Not When They Start</h1>
+    <div class="eyebrow">Stage 3 · Session 5 · Introductory Problems · Repeatable lesson</div>
+    <h1 class="doc-title">Coin Piles — Answering More Than One Question in a Single Run</h1>
     <div class="meta-row">
-      <span><strong>Last time:</strong> Sum of Two Values — two pointers, closing inward, positions tagged before sorting</span>
-      <span><strong>Today:</strong> a brand new technique — greedy interval scheduling</span>
+      <span><strong>Last time:</strong> Distinct Numbers — sorted-and-count fix, all sorted out</span>
+      <span><strong>Today:</strong> a problem that asks several questions, not just one</span>
     </div>
-    <a class="cses-link" href="https://cses.fi/problemset/task/1629" target="_blank" rel="noopener">Open Movie Festival on CSES ↗</a>
+    <a class="cses-link" href="https://cses.fi/problemset/task/1754" target="_blank" rel="noopener">Open Coin Piles on CSES ↗</a>
   </header>
 
   <div class="section">
-    <h2 class="section-title">The problem in plain words</h2>
-    <div class="box box-purple">
-      <div class="box-label">The problem in plain words</div>
-      <p>A festival is showing <code>n</code> movies, one screen, no overlaps allowed. Each movie has a start time and an end time. You want to watch as many <em>whole</em> movies as possible. What's the biggest number of movies you can fit, back to back, with no two overlapping?</p>
-    </div>
-    <p>This is a different shape of problem from anything in Stage 3 so far. It isn't two pointers closing inward on a sorted list — it's a brand new idea called <strong>greedy interval scheduling</strong>: at each step, make the choice that looks best right now, and trust that it stays best all the way to the end.</p>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">The obvious idea — and why it fails</h2>
-    <p>The natural first guess: watch whichever movie starts earliest. That sounds reasonable, but it can trap you.</p>
+    <h2 class="section-title">A new shape of problem</h2>
+    <p>Every problem so far has given you one puzzle to solve: one number, one word, one list. Today's problem, <strong>Coin Piles</strong>, works differently. The first line tells you <em>how many separate questions</em> are coming. Then that many lines follow, each one its own little puzzle, and you need to print one answer for every single one.</p>
 
     <div class="diagram-wrap">
-      <svg viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
-        <text x="240" y="16" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Picking "earliest start" first can block out everything else</text>
-        <line x1="20" y1="40" x2="460" y2="40" stroke="#DEDAD2" stroke-width="1"/>
-        <rect x="20" y="46" width="400" height="22" rx="4" fill="#FBEEEA" stroke="#E9C1B4"/>
-        <text x="220" y="61" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#A3311E">Movie A: starts 0, ends 10 (picked first — starts earliest)</text>
-        <rect x="60" y="80" width="80" height="22" rx="4" fill="#F1EFEA" stroke="#DEDAD2"/>
-        <text x="100" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#6E6A62">B: 1–2</text>
-        <rect x="220" y="80" width="80" height="22" rx="4" fill="#F1EFEA" stroke="#DEDAD2"/>
-        <text x="260" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#6E6A62">C: 3–4</text>
-        <text x="240" y="122" text-anchor="middle" font-family="DM Sans" font-size="12" fill="#34302A">A overlaps both B and C — pick A first and you're stuck with just 1 movie.</text>
-        <text x="240" y="144" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A6B3C">Skip A, watch B then C instead — that's 2 movies. Earliest-start was the wrong idea.</text>
-      </svg>
-      <div class="diagram-caption">A long movie that starts early can block out several short ones later — "starts earliest" doesn't protect you from that.</div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">The fix: sort by when movies END</h2>
-    <p>What actually matters isn't when a movie starts — it's how much time it leaves free <em>afterward</em>. A movie that ends early leaves the rest of the day wide open, no matter when it started. So: sort every movie by its <strong>end</strong> time, smallest first, and walk through them in that order — taking a movie whenever it starts at or after the end of the last movie you kept.</p>
-
-    <div class="diagram-wrap">
-      <svg viewBox="0 0 480 150" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
-        <text x="240" y="16" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Same three movies, sorted by END time instead</text>
-        <g font-family="JetBrains Mono" font-size="13" font-weight="700">
-          <rect x="20" y="32" width="90" height="30" rx="6" fill="#E9F6EE" stroke="#A9DABE"/><text x="65" y="52" text-anchor="middle" fill="#1A6B3C">B: 1–2</text>
-          <rect x="126" y="32" width="90" height="30" rx="6" fill="#E9F6EE" stroke="#A9DABE"/><text x="171" y="52" text-anchor="middle" fill="#1A6B3C">C: 3–4</text>
-          <rect x="232" y="32" width="90" height="30" rx="6" fill="#FBEEEA" stroke="#E9C1B4"/><text x="277" y="52" text-anchor="middle" fill="#A3311E">A: 0–10</text>
+      <svg viewBox="0 0 480 190" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="240" y="18" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">t = 3 means three separate questions are coming</text>
+        <rect x="10" y="32" width="60" height="30" rx="5" fill="#EAF1FA" stroke="#C3D6EE"/>
+        <text x="40" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#2B5FA3">t = 3</text>
+        <path d="M40 62 L40 78 M40 78 L110 100 M40 78 L240 100 M40 78 L370 100" stroke="#8C877F" stroke-width="1" fill="none"/>
+        <g font-family="JetBrains Mono" font-size="12">
+          <rect x="60" y="100" width="100" height="30" rx="5" fill="#F1ECF7" stroke="#D6C7E8"/>
+          <text x="110" y="120" text-anchor="middle" fill="#6B4E8E">query 1: a b</text>
+          <rect x="190" y="100" width="100" height="30" rx="5" fill="#F1ECF7" stroke="#D6C7E8"/>
+          <text x="240" y="120" text-anchor="middle" fill="#6B4E8E">query 2: a b</text>
+          <rect x="320" y="100" width="100" height="30" rx="5" fill="#F1ECF7" stroke="#D6C7E8"/>
+          <text x="370" y="120" text-anchor="middle" fill="#6B4E8E">query 3: a b</text>
         </g>
-        <text x="65" y="78" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#1A6B3C">take (end=2)</text>
-        <text x="171" y="78" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#1A6B3C">3 ≥ 2, take (end=4)</text>
-        <text x="277" y="78" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#A3311E">0 &lt; 4, skip</text>
-        <text x="240" y="112" text-anchor="middle" font-family="DM Sans" font-size="13" font-weight="700" fill="#1A1815">Result: 2 movies (B then C) — matches the answer above</text>
-        <text x="240" y="134" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6E6A62">Sorting by end time never picks A before the shorter ones ever get a chance.</text>
+        <path d="M110 130 L110 145 M240 130 L240 145 M370 130 L370 145" stroke="#8C877F" stroke-width="1"/>
+        <g font-family="JetBrains Mono" font-size="12" font-weight="700">
+          <rect x="70" y="145" width="80" height="26" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="110" y="163" text-anchor="middle" fill="#1A6B3C">YES</text>
+          <rect x="200" y="145" width="80" height="26" rx="5" fill="#FBEEEA" stroke="#E9C1B4"/>
+          <text x="240" y="163" text-anchor="middle" fill="#A3311E">NO</text>
+          <rect x="330" y="145" width="80" height="26" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+          <text x="370" y="163" text-anchor="middle" fill="#1A6B3C">YES</text>
+        </g>
+        <text x="240" y="188" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#6E6A62">one line of output for every single query — three questions in, three answers out</text>
       </svg>
-      <div class="diagram-caption">Sorted by end time, the greedy walk naturally prefers movies that leave more room behind them.</div>
+      <div class="diagram-caption">The first number isn't part of the puzzle — it just tells you how many puzzles are about to follow.</div>
     </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">The new tool: looping over the questions</h2>
+    <p>You already know how to loop a fixed number of times — you did that with <code>range(1000)</code> back in the battle simulator. This is the same idea, except the number of times to loop isn't fixed in your code, it's read from the first line of input.</p>
 
     <div class="code-compare">
       <div class="code-block code-wrong">
-        <div class="code-header">Wrong — sorts by start time, greedy picks in that order</div>
-        <div class="code-body">n = int(input())
-movies = []
-for _ in range(n):
-    a, b = map(int, input().split())
-    movies.append((a, b))
-
-movies.sort()   # sorts by start time first
-
-count = 0
-last_end = -1
-for a, b in movies:
-    if a >= last_end:
-        count += 1
-        last_end = b
-
-print(count)</div>
+        <div class="code-header">Wrong — only answers one question</div>
+        <div class="code-body">a, b = map(int, input().split())
+total = a + b
+if total % 3 == 0 and min(a, b) &gt;= total // 3:
+    print("YES")
+else:
+    print("NO")
+# this ignores the first line completely
+# and breaks the moment there's more
+# than one question</div>
       </div>
       <div class="code-block code-right">
-        <div class="code-header">Right — sorts by end time, the new idea for today</div>
-        <div class="code-body">n = int(input())
-movies = []
-for _ in range(n):
+        <div class="code-header">Right — answers every question</div>
+        <div class="code-body">t = int(input())   # how many separate questions are coming -- new today
+
+for _ in range(t):
     a, b = map(int, input().split())
-    movies.append((a, b))
 
-movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
-
-# ...then loop through movies in this order, keeping a tracker for the
-# end time of the last movie you decided to watch (start it very low,
-# like -1, before the loop). For each movie, if its start time is >=
-# that tracker, you can fit it in -- count it, and update the tracker
-# to this movie's end time. You already know how to loop through a
-# list and keep a running count from Coin Piles and Bit Strings --
-# write that part yourself.</div>
+    # ...decide YES or NO for this one query. Remember the two facts:
+    # does a + b divide evenly by 3, and is the smaller pile big enough
+    # to survive (a + b) // 3 moves. You already know how to read two
+    # numbers on one line with map(int, input().split()) from Missing
+    # Number -- write the YES/NO check yourself.</div>
       </div>
     </div>
 
     <div class="box box-plain">
       <div class="box-label">Why this stops short on purpose</div>
-      <p>The new idea today is the sort key, not the loop — you've written "loop through a sorted list, keep a running count" several times already. Paste just the right-hand block on its own and run it: it won't crash, but it won't print anything either. That silence means the counting loop is the part still left for you to write.</p>
+      <p>The new idea today is the <code>t</code>-then-loop shape, not the YES/NO math itself. Paste just the right-hand block on its own and run it with several lines of input: it reads <code>t</code> and reads each query's two numbers, then stops — nothing is printed. That silence means the actual YES/NO decision is still left for you to write.</p>
+      <p>The underscore in <code>for _ in range(t):</code> just means "repeat this t times, but I don't need to know which round I'm on."</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">The actual puzzle: emptying two coin piles</h2>
+    <p>You have two piles of coins, sized a and b. Each move, you either take 1 coin from the first pile and 2 from the second, or 2 from the first and 1 from the second. For each question, decide: can you empty both piles down to exactly zero?</p>
+
+    <div class="box box-blue">
+      <div class="box-label">Two facts that solve it</div>
+      <p>Every move removes exactly 3 coins total, so a + b must divide evenly by 3 — otherwise you'll never land on exactly zero. And the smaller pile has to have at least as many coins as the total number of moves needed (a + b) // 3 — otherwise it runs out early while the other pile still has coins left.</p>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 460 150" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="115" y="18" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Piles (1, 2) — works</text>
+        <text x="115" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#34302A">1 move: take 1 from pile A, 2 from pile B</text>
+        <rect x="60" y="55" width="110" height="30" rx="5" fill="#E9F6EE" stroke="#A9DABE"/>
+        <text x="115" y="75" text-anchor="middle" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#1A6B3C">(1, 2) → (0, 0)</text>
+        <text x="115" y="105" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#1A6B3C">total 3, divides by 3, smaller pile (1) covers the 1 move needed → YES</text>
+        <line x1="230" y1="10" x2="230" y2="120" stroke="#DEDAD2" stroke-width="1"/>
+        <text x="345" y="18" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">Piles (5, 1) — fails</text>
+        <text x="345" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#34302A">total 6, needs 2 moves</text>
+        <rect x="290" y="55" width="110" height="30" rx="5" fill="#FBEEEA" stroke="#E9C1B4"/>
+        <text x="345" y="75" text-anchor="middle" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#A3311E">min(5,1) = 1 &lt; 2</text>
+        <text x="345" y="105" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#A3311E">pile B only has 1 coin but 2 moves need it → NO</text>
+      </svg>
+      <div class="diagram-caption">Same two checks, every time: does the total divide evenly by 3, and can the smaller pile survive that many moves.</div>
     </div>
   </div>
 
   <div class="section">
     <h2 class="section-title">Common mistakes on this one</h2>
     <div class="mistake-list">
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Sorting by <strong>start</strong> time instead of end time — the intuitive guess, and the one that fails on cases like the one above.</div></div>
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Sorting by how <strong>long</strong> each movie is (shortest first) — another common guess, also wrong: a short movie in the wrong spot can still block out more than it saves.</div></div>
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Updating the "last end" tracker on every movie you look at, instead of only the ones you actually decide to keep.</div></div>
-      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Using <code>&gt;</code> instead of <code>&gt;=</code> when checking if a movie fits — a movie that starts exactly when the last one ends is allowed.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Reading only one query and ignoring <code>t</code> entirely — works on the first line, breaks the moment there's more than one question.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Reading <code>t</code> together with the first query's numbers on the same line, instead of on its own separate line.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Checking <code>min(a, b) &gt;= total // 3</code> without also checking <code>total % 3 == 0</code> first — both conditions are needed, not just one.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Printing YES/NO in the wrong case, like <code>Yes</code>/<code>No</code> — CSES judges exact text, capitalization included.</div></div>
     </div>
   </div>
 
@@ -273,15 +273,15 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <div class="hint-ladder">
       <details class="hint-item">
         <summary>Hint 1</summary>
-        <div class="hint-body">Look at what you're sorting by right now. Is "starts earliest" really the thing that tells you how much room a movie leaves for the rest of the day — or is there something else about a movie that matters more for that?</div>
+        <div class="hint-body">If you only see one answer printed instead of t answers, what does that tell you about how many times your loop actually ran?</div>
       </details>
       <details class="hint-item">
         <summary>Hint 2</summary>
-        <div class="hint-body">Try your current code on this by hand: Movie A runs 0 to 10. Movies B and C run 1 to 2 and 3 to 4. If you pick whichever starts earliest, what happens to B and C? What would you need to sort by so A doesn't get picked before them?</div>
+        <div class="hint-body">Each move removes exactly 3 coins total. If a + b doesn't divide evenly by 3, could you ever land on exactly (0, 0)?</div>
       </details>
       <details class="hint-item">
         <summary>Hint 3</summary>
-        <div class="hint-body">Sort your movies by their <em>end</em> time, smallest first, before doing anything else. Then walk through them in that order and ask, for each one: "does this movie start at or after the end of the last movie I decided to keep?"</div>
+        <div class="hint-body">If a + b does divide by 3, how many total moves would that take? Does the smaller pile have enough coins to survive being drawn from that many times?</div>
       </details>
     </div>
   </div>
@@ -290,15 +290,14 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <h2 class="section-title">Your task</h2>
     <div class="box box-blue">
       <div class="box-label">Suggested target</div>
-      <p>Try <strong>Movie Festival</strong>, the first problem in a new run on greedy interval scheduling. A different pick is fine too — just note in your comment whether it's the same "sort and pick greedily" shape or something else.</p>
+      <p>Try <strong>Coin Piles</strong> — it's built exactly for the multi-question loop above. A different pick is fine too, just note in your comment whether it needs the t-then-loop pattern or something else.</p>
     </div>
     <div class="checklist">
-      <div class="check-item"><div class="check-box"></div><div>Open CSES Sorting and Searching, open Movie Festival (or your own pick)</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Open CSES Introductory Problems and open Coin Piles (or your own pick)</div></div>
       <div class="check-item"><div class="check-box"></div><div>Write one sentence as a comment at the top describing what the problem is asking, in your own words</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Sort by END time, not start time and not duration</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Walk through the sorted list once, keeping a tracker for the end time of the last movie you kept</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Only count and update the tracker when a movie actually fits</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Test it against the sample, submit it, then check your code below</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Read the first line as t, then loop range(t) times, reading and answering one query per loop</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Inside the loop: check total % 3 == 0 and min(a, b) >= total // 3, print YES or NO</div></div>
+      <div class="check-item"><div class="check-box"></div><div>Test it, submit it, then check your code below</div></div>
     </div>
   </div>
 
@@ -307,9 +306,9 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <div class="advance-rule">
       <div class="box-label">Advance rule</div>
       <div class="checklist">
-        <div class="check-item"><div class="check-box"></div><div>CSES says ACCEPTED, including the large test cases (n up to 200,000)</div></div>
-        <div class="check-item"><div class="check-box"></div><div>You can say in one sentence why sorting by end time works and sorting by start time doesn't</div></div>
-        <div class="check-item"><div class="check-box"></div><div>You got there without needing Hint 3 above — if you did need it, that's fine, just mention it to your dad so it gets a quick second look next week</div></div>
+        <div class="check-item"><div class="check-box"></div><div>CSES says ACCEPTED on all queries, including the large-t runs</div></div>
+        <div class="check-item"><div class="check-box"></div><div>You can explain, in one sentence, why both conditions (divides by 3, and the smaller-pile check) are needed together</div></div>
+        <div class="check-item"><div class="check-box"></div><div>You got there without needing Hint 3 above — if you did need it, that's fine, just mention it to your dad</div></div>
       </div>
     </div>
   </div>
@@ -351,7 +350,7 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
     <p>Same toolkit as always. Guess first, read the error or the failed test carefully, try one fix, print a variable if you're unsure what it holds, search if you need to — and if you're still stuck, ask here.</p>
     <div class="box box-plain">
       <div class="box-label">A trick just for this one</div>
-      <p>If your count looks wrong, print your sorted <code>movies</code> list right after sorting, before the loop. The end times (second number in each pair) should be going up the whole way down the list. If they're not, you sorted by the wrong thing.</p>
+      <p>If your answers come out shifted or wrong, try printing a and b right after you read them, inside the loop. If you only see one pair printed instead of t pairs, the loop isn't running enough times — double check t was read correctly on its own line, separately from the queries.</p>
     </div>
 
     <div class="panel">
@@ -359,58 +358,44 @@ movies.sort(key=lambda m: m[1])   # sort by END time -- the new part today
       <div class="chat-log" id="chatLog"></div>
 
       <label for="nickMessageInput">What's going on?</label>
-      <input type="text" id="nickMessageInput" placeholder="e.g. it says WRONG ANSWER on test 8 and I don't see why">
+      <input type="text" id="nickMessageInput" placeholder="e.g. it only prints one answer instead of t answers">
       <button class="action-btn" id="askBtn">Ask for help</button>
       <div id="helpStatus"></div>
     </div>
   </div>
 
   <footer class="doc-footer">
-    <span>Nick Bystrov — Stage 3 · Session 10</span>
-    <span>Suggested: Movie Festival (Sorting and Searching)</span>
+    <span>Nick Bystrov — Stage 3 · Session 5</span>
+    <span>Suggested: Coin Piles (Introductory Problems)</span>
     <span>Debugging Toolkit applies here</span>
   </footer>
 
 </div>
 
 <script>
-// ---------------------------------------------------------------------
-// Shared problem context — sent with every /evaluate and /help call.
-// ---------------------------------------------------------------------
 const PROBLEM_CONTEXT = {
-  problem_id: "cses-1629",
-  problem_title: "Movie Festival",
-  intended_method: "sort movies by end time ascending, then greedily keep a movie whenever its start time is >= the end time of the last movie kept",
+  problem_id: "cses-1754",
+  problem_title: "Coin Piles",
+  intended_method: "read t, then loop range(t) times; per query check total % 3 == 0 and min(a,b) >= total // 3 (or any mathematically equivalent condition), print YES or NO",
   accept_criteria: [
-    "reads n, then n lines of (start, end)",
-    "sorts by END time, not start time and not duration",
-    "greedily counts a movie only if its start >= the end of the last movie taken",
-    "runs within time limits at n = 2e5 (O(n log n), not O(n^2))"
+    "reads t first on its own line, then loops range(t) times",
+    "reads a, b per query correctly",
+    "checks both: total divisible by 3, AND smaller pile >= total // 3 (equivalent forms like max(a,b) <= 2*min(a,b) are also valid when combined with the divisibility check)",
+    "prints exact YES/NO text per query"
   ],
-  taught_recently: ["greedy interval scheduling (sort by end time, keep if it fits)"],
+  taught_recently: ["this is the first multi-query-loop session -- new pattern, not an extension of a prior technique"],
   learner_context: [
     "11 years old, works alone, Python in Thonny",
-    "just finished three sessions of two-pointer technique (Apartments, Ferris Wheel, Sum of Two Values)",
-    "this is his first exposure to greedy interval scheduling -- a brand new technique, not an extension of two pointers",
-    "common wrong guesses to watch for: sorting by start time, or sorting by movie duration"
+    "just finished the Distinct Numbers fix session (sort-then-count, robust against the anti-hash TLE)",
+    "this session is a retrospective/repeat lesson -- Nick may be returning to review a technique he's already covered, not necessarily seeing it for the first time",
+    "Nick has previously independently derived an equivalent condition (max(a,b) <= 2*min(a,b)) rather than the taught one -- accept mathematically equivalent conditions as correct, not just the exact taught form",
+    "common wrong guess to watch for: reading only one query and ignoring t entirely"
   ]
 };
 
-// ---------------------------------------------------------------------
-// Deployment switch. Fill WORKER_BASE_URL in once the Cloudflare Worker
-// is deployed (see ../SETUP.md) — e.g. "https://nick-cp-tutor.alex123.workers.dev".
-// Until then, this file runs in TEST MODE: it calls Claude directly
-// through this artifact's own API bridge, which only works while this
-// file is open inside a Claude conversation — NOT once it's hosted on
-// GitHub Pages. Once WORKER_BASE_URL is filled in, every request routes
-// through the real Worker instead, which is what makes this work once
-// deployed for real, unattended, on a weekday.
-// ---------------------------------------------------------------------
 const WORKER_BASE_URL = "https://nick-cp-tutor.abystrov66.workers.dev";
 const IS_TEST_MODE = WORKER_BASE_URL === "REPLACE_WITH_YOUR_WORKER_URL";
 
-// Test-mode-only: identical prompts/schemas to worker/index.js, used to
-// call Claude directly when no Worker URL has been configured yet.
 const EVALUATE_SYSTEM_PROMPT = `You are the evaluator for a single 11-year-old learning competitive
 programming alone in Python, preparing for USACO Bronze. You judge one
 submission and return one JSON object. You never speak to the child except
@@ -584,19 +569,6 @@ const HELP_TOOL = {
   }
 };
 
-// ---------------------------------------------------------------------
-// State. Two different environments need two different mechanisms:
-//   - Inside a Claude artifact preview, browser localStorage is blocked
-//     entirely — Claude artifacts use window.storage instead.
-//   - Once actually deployed on GitHub Pages, window.storage won't exist
-//     (it's a Claude.ai artifact-platform feature, not a web standard),
-//     but real localStorage works fine there — which is the architecture
-//     Section 3 actually specifies for the deployed site.
-// Feature-detect which one is available and use that, with real error
-// handling throughout (a previous version had none on save, which meant
-// a blocked write threw silently and killed every button click before
-// anything else in the handler ran).
-// ---------------------------------------------------------------------
 const STATE_KEY = "nick_cp_tutor:" + PROBLEM_CONTEXT.problem_id;
 const DEFAULT_STATE = { currentCode: "", lastVerdict: null, attemptCount: 0, helpConversation: [], hintsGiven: 0 };
 
@@ -633,13 +605,6 @@ async function saveState(state) {
 
 let state = Object.assign({}, DEFAULT_STATE);
 
-// ---------------------------------------------------------------------
-// Anthropic call helpers — retry once if the tool isn't invoked, then
-// surface a clear error rather than guessing at malformed output.
-// Same evaluate/help model split as worker/index.js — see that file for
-// why: /evaluate is a mechanical classification task Haiku handles well,
-// /help needs a stronger model for the subtler "how much to reveal" call.
-// ---------------------------------------------------------------------
 const MODEL_EVALUATE_TEST_MODE = "claude-haiku-4-5-20251001";
 const MODEL_HELP_TEST_MODE = "claude-sonnet-5";
 
@@ -686,9 +651,6 @@ async function callWorker(path, envelope) {
   return data;
 }
 
-// Same safeguards as worker/index.js — kept in sync so TEST MODE previews
-// behave the same as the deployed Worker. See that file for the reasoning
-// and the failures these caught during testing.
 function opensWithQuestion(text) {
   if (!text) return false;
   const trimmed = text.trim();
@@ -745,9 +707,6 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ---------------------------------------------------------------------
-// Rendering
-// ---------------------------------------------------------------------
 function renderModeBanner() {
   const el = document.getElementById('modeBanner');
   if (IS_TEST_MODE) {
@@ -789,9 +748,6 @@ function renderChat() {
   el.scrollTop = el.scrollHeight;
 }
 
-// ---------------------------------------------------------------------
-// Actions
-// ---------------------------------------------------------------------
 async function handleCheckCode() {
   const btn = document.getElementById('checkBtn');
   const code = document.getElementById('codeInput').value;
@@ -868,9 +824,6 @@ async function handleAskForHelp() {
   }
 }
 
-// ---------------------------------------------------------------------
-// Init
-// ---------------------------------------------------------------------
 async function init() {
   state = await loadState();
   renderModeBanner();
@@ -886,7 +839,7 @@ async function init() {
   });
   document.getElementById('codeInput').addEventListener('change', () => {
     state.currentCode = document.getElementById('codeInput').value;
-    saveState(state); // best-effort background save, not blocking the UI
+    saveState(state);
   });
 }
 
