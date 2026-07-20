@@ -79,6 +79,30 @@
   .code-right .code-header { background: var(--green-light); color: var(--green); border-bottom: 1px solid var(--green-border); }
   .code-body { background: #22201C; color: #F1EFEA; padding: 14px 16px; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre; }
 
+  .hint-ladder { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+  .hint-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .hint-item summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; color: var(--ink); list-style: none; }
+  .hint-item summary::-webkit-details-marker { display: none; }
+  .hint-item summary::before { content: "▸  "; color: var(--text-muted); }
+  .hint-item[open] summary::before { content: "▾  "; }
+  .hint-item[open] summary { border-bottom: 1px solid var(--border); background: var(--surface-alt); }
+  .hint-body { padding: 12px 16px; font-size: 14px; line-height: 1.6; }
+
+  .mistake-list { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+  .mistake-item { display: flex; gap: 10px; align-items: flex-start; background: var(--red-light); border: 1px solid var(--red-border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
+  .mistake-icon { flex-shrink: 0; color: var(--red); font-weight: 700; }
+
+  .advance-rule { background: var(--green-light); border: 1px solid var(--green-border); border-radius: 8px; padding: 18px 22px; margin: 20px 0; }
+  .advance-rule .box-label { color: var(--green); }
+  .advance-rule .checklist { margin: 10px 0 0; }
+  .advance-rule .check-item { background: var(--surface); }
+
+  .step-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0; background: var(--surface); }
+  .step-row { display: flex; border-bottom: 1px solid var(--border); }
+  .step-row:last-child { border-bottom: none; }
+  .step-num { width: 44px; flex-shrink: 0; background: var(--surface-alt); display: flex; align-items: flex-start; justify-content: center; padding-top: 14px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-muted); border-right: 1px solid var(--border); }
+  .step-text { padding: 14px 18px; font-size: 14px; line-height: 1.6; }
+
   hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 
   .doc-footer { margin-top: 60px; padding-top: 18px; border-top: 3px solid var(--ink); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
@@ -124,10 +148,13 @@
     body { background: #FFFFFF !important; color: #000000 !important; }
     .page { max-width: 100%; padding: 0; }
     * { color: #000000 !important; }
-    .box, .diagram-wrap, .check-item, .panel, .result-card, .chat-bubble { background: #FFFFFF !important; border-color: #000000 !important; }
+    .box, .diagram-wrap, .check-item, .step-num, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
     .code-body { background: #FFFFFF !important; color: #000000 !important; border: 1px solid #000000; }
     h1, h2, h3 { color: #000000 !important; }
     .panel, .mode-banner { display: none; } /* interactive widgets don't belong on a printed page */
+    .hint-item summary::before { content: "" !important; }
+    .hint-item summary { cursor: default; }
+    details > *:not(summary) { display: block !important; }
   }
 </style>
 </head>
@@ -296,18 +323,56 @@ pairs.sort()   # sorts by value, position rides along
   </div>
 
   <div class="section">
+    <h2 class="section-title">Common mistakes on this one</h2>
+    <div class="mistake-list">
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Sorting the plain <code>values</code> list instead of building <code>(value, position)</code> pairs first — this loses the original positions for good, they can't be recovered afterward.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Printing <code>left + 1</code> and <code>right + 1</code> (positions in the sorted list) instead of <code>pairs[left][1]</code> and <code>pairs[right][1]</code> (the original positions stored in the pair).</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Adding an extra <code>+ 1</code> when printing — the position was already made 1-indexed once, back when the pair was built with <code>i + 1</code>.</div></div>
+      <div class="mistake-item"><div class="mistake-icon">✕</div><div>Not printing exactly <code>IMPOSSIBLE</code> when the pointers cross without ever matching — CSES checks the exact text, capitalization included.</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Hints, if you want them</h2>
+    <p>Try it yourself first. If you're stuck, open these one at a time — don't jump straight to the last one.</p>
+    <div class="hint-ladder">
+      <details class="hint-item">
+        <summary>Hint 1</summary>
+        <div class="hint-body">If your printed positions look like small, plain index numbers no matter which values actually matched, what does that tell you about which numbers you're printing — the ones stored in the pair, or something else entirely?</div>
+      </details>
+      <details class="hint-item">
+        <summary>Hint 2</summary>
+        <div class="hint-body">When you built each <code>(value, position)</code> pair, was the position you stored captured before you sorted anything, or after?</div>
+      </details>
+      <details class="hint-item">
+        <summary>Hint 3</summary>
+        <div class="hint-body">Build <code>pairs.append((values[i], i + 1))</code> for every i, then <code>pairs.sort()</code>. Walk with two pointers from opposite ends comparing <code>pairs[left][0] + pairs[right][0]</code> to x. On a match, print <code>pairs[left][1]</code> and <code>pairs[right][1]</code> — never <code>left</code> or <code>right</code> themselves.</div>
+      </details>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">You're ready to move on when</h2>
+    <div class="advance-rule">
+      <div class="box-label">Advance rule</div>
+      <div class="checklist">
+        <div class="check-item"><div class="check-box"></div><div>CSES says ACCEPTED, including the large test cases (n up to 200,000)</div></div>
+        <div class="check-item"><div class="check-box"></div><div>You can explain, in one sentence, why sorting the plain values loses information that sorting (value, position) pairs doesn't</div></div>
+        <div class="check-item"><div class="check-box"></div><div>You got there without needing Hint 3 above — if you did need it, that's fine, just mention it to your dad</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
     <h2 class="section-title">Your task</h2>
     <div class="box box-blue">
       <div class="box-label">Suggested target</div>
       <p>Try <strong>Sum of Two Values</strong>, right after Ferris Wheel in Sorting and Searching. A different pick is fine too — just note in your comment whether it needs position-pairing or something else.</p>
     </div>
-    <div class="checklist">
-      <div class="check-item"><div class="check-box"></div><div>Open CSES Sorting and Searching, open Sum of Two Values (or your own pick)</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Write one sentence as a comment at the top describing what the problem is asking, in your own words</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Build a list of <code>(value, position)</code> pairs before sorting — don't sort the plain values alone</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Two pointers, opposite ends, closing inward — same shape as Ferris Wheel</div></div>
-      <div class="check-item"><div class="check-box"></div><div>When you print your answer, make sure it's the position from the pair, not the pair's spot in the sorted list</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Test it against the sample, submit it, then check your code below</div></div>
+    <div class="step-list">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">Open CSES Sorting and Searching, open Sum of Two Values (or your own pick). Write one sentence as a comment describing what it's asking, in your own words.</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">Write the code in Thonny. Test it first with the worked example from above — <code>values = [2, 7, 5, 1]</code>, <code>x = 8</code> — and confirm you get positions 4 and 2 (in either order), matching the real CSES sample.</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">Once that matches, switch to reading the real input — n and x on the first line, then the values.</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-text">Test it against the sample on the CSES page, submit it, then check your code below too.</div></div>
     </div>
   </div>
 

@@ -72,6 +72,12 @@
   .check-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
   .check-box { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
 
+  .step-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0; background: var(--surface); }
+  .step-row { display: flex; border-bottom: 1px solid var(--border); }
+  .step-row:last-child { border-bottom: none; }
+  .step-num { width: 44px; flex-shrink: 0; background: var(--surface-alt); display: flex; align-items: flex-start; justify-content: center; padding-top: 14px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-muted); border-right: 1px solid var(--border); }
+  .step-text { padding: 14px 18px; font-size: 14px; line-height: 1.6; }
+
   .code-compare { display: flex; gap: 14px; margin: 18px 0; flex-wrap: wrap; flex-direction: column; }
   .code-block { flex: 1 1 100%; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
   .code-header { padding: 8px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -141,7 +147,7 @@
     body { background: #FFFFFF !important; color: #000000 !important; }
     .page { max-width: 100%; padding: 0; }
     * { color: #000000 !important; }
-    .box, .diagram-wrap, .check-item, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
+    .box, .diagram-wrap, .check-item, .step-num, .panel, .result-card, .chat-bubble, .hint-item, .mistake-item, .advance-rule { background: #FFFFFF !important; border-color: #000000 !important; }
     .code-body { background: #FFFFFF !important; color: #000000 !important; border: 1px solid #000000; }
     h1, h2, h3 { color: #000000 !important; }
     .panel, .mode-banner { display: none; }
@@ -186,13 +192,31 @@
     <p>CSES asks for the answer <strong>modulo</strong> <code>10^9 + 7</code> — meaning: divide the real answer by that number and print only the remainder. This is a standard trick in competitive programming so specifically that number shows up constantly; you'll see <code>10**9 + 7</code> again and again.</p>
 
     <div class="diagram-wrap">
-      <svg viewBox="0 0 460 130" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
-        <text x="230" y="18" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">The real answer vs. what you actually print</text>
-        <text x="20" y="50" font-family="JetBrains Mono" font-size="12" fill="#A3311E">2^1000000 = a 301,030-digit number</text>
-        <text x="20" y="75" font-family="DM Sans" font-size="11" fill="#34302A">too big to print, too big to even want to look at</text>
-        <text x="20" y="105" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#1A6B3C">2^1000000 mod (10^9 + 7) = one ordinary 9- or 10-digit number</text>
+      <svg viewBox="0 0 460 210" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+        <text x="230" y="18" text-anchor="middle" font-family="DM Sans" font-size="12" font-weight="700" fill="#1A1815">how many digits, as n grows</text>
+
+        <text x="10" y="42" font-family="JetBrains Mono" font-size="11" fill="#6E6A62">n=10</text>
+        <rect x="60" y="32" width="16" height="16" fill="#EAF1FA" stroke="#C3D6EE"/>
+        <text x="85" y="45" font-family="DM Sans" font-size="10" fill="#34302A">2^10 = 1,024 — 4 digits</text>
+
+        <text x="10" y="72" font-family="JetBrains Mono" font-size="11" fill="#6E6A62">n=100</text>
+        <rect x="60" y="62" width="60" height="16" fill="#F1ECF7" stroke="#D6C7E8"/>
+        <text x="130" y="75" font-family="DM Sans" font-size="10" fill="#34302A">31 digits</text>
+
+        <text x="10" y="102" font-family="JetBrains Mono" font-size="11" fill="#6E6A62">n=1,000,000</text>
+        <rect x="115" y="92" width="330" height="16" fill="#FBEEEA" stroke="#A3311E"/>
+        <path d="M445 92 L452 100 L445 108" stroke="#A3311E" stroke-width="1.5" fill="none"/>
+        <text x="230" y="126" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#A3311E">301,030 digits — keeps going right off the page</text>
+
+        <line x1="10" y1="145" x2="450" y2="145" stroke="#DEDAD2" stroke-width="1"/>
+
+        <text x="10" y="168" font-family="JetBrains Mono" font-size="11" fill="#1A6B3C">any of these n</text>
+        <rect x="115" y="158" width="20" height="16" fill="#E9F6EE" stroke="#A9DABE"/>
+        <text x="145" y="171" font-family="DM Sans" font-size="10" fill="#1A6B3C">pow(2, n, MOD) — always 9 or 10 digits, never more</text>
+
+        <text x="230" y="198" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6E6A62">the real answer explodes — the remainder never does</text>
       </svg>
-      <div class="diagram-caption">You're not solving a different, easier problem — you're printing a small, honest piece of the same giant number.</div>
+      <div class="diagram-caption">Same n = 1,000,000 in every row above. The full answer's digit count keeps climbing forever; the remainder you actually print stays exactly the same tiny size no matter how big n gets.</div>
     </div>
 
     <p>Here's the part that actually needs care. Two ways to compute this look almost identical, but only one of them stays fast:</p>
@@ -269,12 +293,11 @@ MOD = 10**9 + 7
       <div class="box-label">Suggested target</div>
       <p>Try <strong>Bit Strings</strong> — it's built exactly for the modular exponentiation trick above. A different pick is fine too, just note in your comment whether it needs this trick or something else.</p>
     </div>
-    <div class="checklist">
-      <div class="check-item"><div class="check-box"></div><div>Open CSES Introductory Problems and open Bit Strings (or your own pick)</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Write one sentence as a comment at the top describing what the problem is asking, in your own words</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Set MOD = 10**9 + 7</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Use pow(2, n, MOD) — not 2 ** n % MOD — to compute the answer</div></div>
-      <div class="check-item"><div class="check-box"></div><div>Test it, submit it, then check your code below</div></div>
+    <div class="step-list">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">Open CSES Introductory Problems and open Bit Strings (or your own pick). Write one sentence as a comment describing what it's asking, in your own words.</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">Write the code in Thonny with <code>MOD = 10**9 + 7</code> and <code>print(pow(2, n, MOD))</code>. Test it first with a small hardcoded <code>n = 10</code> and confirm it matches <code>2**10 % MOD</code> (both should be 1024) — easy to check by eye at this size.</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">Once that matches, switch to reading the real input and trust the same line at n = 1,000,000 — that's the whole point of using pow() with three arguments, it stays just as fast at any size.</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-text">Test it against the sample on the CSES page, submit it, then check your code below too.</div></div>
     </div>
   </div>
 
