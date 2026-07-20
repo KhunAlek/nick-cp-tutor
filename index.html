@@ -75,10 +75,6 @@
   .tag-technique { background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--border); }
   .session-arrow { display: flex; align-items: center; padding: 0 18px; color: var(--text-muted); font-size: 18px; }
 
-  .checklist { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
-  .check-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
-  .check-box { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
-
   hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
   .doc-footer { margin-top: 60px; padding-top: 18px; border-top: 3px solid var(--ink); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 
@@ -87,7 +83,7 @@
     body { background: #FFFFFF !important; color: #000000 !important; }
     .page { max-width: 100%; padding: 0; }
     * { color: #000000 !important; }
-    .box, .session-card, .check-item { background: #FFFFFF !important; border-color: #000000 !important; }
+    .box, .session-card { background: #FFFFFF !important; border-color: #000000 !important; }
     h1, h2, h3 { color: #000000 !important; }
   }
 </style>
@@ -96,7 +92,7 @@
 <div class="page">
 
   <header class="doc-header">
-    <div class="eyebrow">Stage 3 · Sorting and Searching · Session Index</div>
+    <div class="eyebrow">Stage 3 · Introductory Problems + Sorting and Searching · Session Index</div>
     <h1 class="doc-title">Nick's CP Tutor — All Sessions</h1>
     <div class="meta-row">
       <span><strong>Language:</strong> Python, in Thonny</span>
@@ -107,23 +103,68 @@
 
   <div class="section">
     <h2 class="section-title">How this works</h2>
-    <p>Each session below is one self-contained page: the lesson, some diagrams, a wrong/right code comparison, hints you can open one at a time if you get stuck, and a live "Check my code" box that gives the same judgment your dad's evaluator would give — right away, without waiting.</p>
+    <p>Each session below is one self-contained page: the lesson, some diagrams, a wrong/right code comparison, common mistakes, hints you can open one at a time if you get stuck, and a live "Check my code" box that gives the same judgment your dad's evaluator would give — right away, without waiting.</p>
     <div class="box box-plain">
-      <div class="box-label">If you're not sure where to start</div>
-      <p>Go in order. Each session assumes you've done the ones before it. If you've already done Sum of Two Values, start at Session 10.</p>
+      <div class="box-label">Come back anytime</div>
+      <p>Every session here — including the ones you already finished — is set up to be repeated. If you want a refresher before moving on to something new, or you just want to see how a problem clicked into place, open any of them again. The live Check-my-code and Ask-for-help boxes work the same way every time.</p>
     </div>
   </div>
 
   <div class="section">
-    <h2 class="section-title">Two-pointer run (complete)</h2>
-    <p>Three sessions establishing the two-pointer technique — sort a list, then walk it with two markers instead of checking every pair.</p>
+    <h2 class="section-title">Introductory Problems run (Sessions 1–6)</h2>
+    <p>The first six sessions on CSES — one new small tool per session, building up from a single number to strings, sets, multi-query loops, and modular arithmetic.</p>
     <div class="session-list">
-      <a class="session-card" href="lesson_session9_sum_of_two_values.html">
-        <div class="session-num status-live">S9</div>
+      <a class="session-card" href="lesson_session1_weird_algorithm.html">
+        <div class="session-num status-new">S1</div>
         <div class="session-content">
-          <div class="session-title">Sum of Two Values</div>
-          <div class="session-desc">Two pointers, closing inward — plus the trap of sorting away the original positions, fixed by pairing (value, position) before you sort.</div>
-          <div class="session-tags"><span class="tag tag-live">Live</span><span class="tag tag-technique">two pointers · opposite ends</span></div>
+          <div class="session-title">Weird Algorithm</div>
+          <div class="session-desc">Your first CSES submission. int(input()) and the classic "input() gives you text, not a number" wall.</div>
+          <div class="session-tags"><span class="tag tag-new">Repeatable</span><span class="tag tag-technique">int(input()) · while loop</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+      <a class="session-card" href="lesson_session2_missing_number.html">
+        <div class="session-num status-new">S2</div>
+        <div class="session-content">
+          <div class="session-title">Missing Number</div>
+          <div class="session-desc">Reading several numbers on one line with list(map(int, input().split())), plus the Gauss sum trick.</div>
+          <div class="session-tags"><span class="tag tag-new">Repeatable</span><span class="tag tag-technique">multi-number input · sum trick</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+      <a class="session-card" href="lesson_session3_repetitions.html">
+        <div class="session-num status-new">S3</div>
+        <div class="session-content">
+          <div class="session-title">Repetitions</div>
+          <div class="session-desc">Strings as sequences, and the streak-tracking pattern — current vs. best, with the classic missing-reset bug.</div>
+          <div class="session-tags"><span class="tag tag-new">Repeatable</span><span class="tag tag-technique">strings · streak tracking</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+      <a class="session-card" href="lesson_session4_distinct_numbers.html">
+        <div class="session-num status-new">S4</div>
+        <div class="session-content">
+          <div class="session-title">Distinct Numbers</div>
+          <div class="session-desc">set() for instant deduplication — plus its one rare weak spot, and the sort-and-count fix that has none.</div>
+          <div class="session-tags"><span class="tag tag-new">Repeatable</span><span class="tag tag-technique">sets · sort-and-count</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+      <a class="session-card" href="lesson_session5_coin_piles.html">
+        <div class="session-num status-new">S5</div>
+        <div class="session-content">
+          <div class="session-title">Coin Piles</div>
+          <div class="session-desc">The multi-query loop shape: read t, then answer t separate questions, one per line.</div>
+          <div class="session-tags"><span class="tag tag-new">Repeatable</span><span class="tag tag-technique">multi-query loop</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+      <a class="session-card" href="lesson_session6_bit_strings.html">
+        <div class="session-num status-new">S6</div>
+        <div class="session-content">
+          <div class="session-title">Bit Strings</div>
+          <div class="session-desc">When the real answer has 300,000 digits — modular arithmetic and pow(2, n, MOD).</div>
+          <div class="session-tags"><span class="tag tag-new">Repeatable</span><span class="tag tag-technique">modular exponentiation</span></div>
         </div>
         <div class="session-arrow">→</div>
       </a>
@@ -131,8 +172,42 @@
   </div>
 
   <div class="section">
-    <h2 class="section-title">Greedy interval scheduling run (new this week)</h2>
-    <p>Three sessions on a brand new technique: sort by the right key, then scan through once making a simple greedy decision at each step.</p>
+    <h2 class="section-title">Two-pointer run (Sessions 7–9)</h2>
+    <p>The first move into Sorting and Searching — sort a list, then walk it with two markers instead of checking every pair.</p>
+    <div class="session-list">
+      <a class="session-card" href="lesson_session7_apartments.html">
+        <div class="session-num status-new">S7</div>
+        <div class="session-content">
+          <div class="session-title">Apartments</div>
+          <div class="session-desc">The first two-pointer session — two separate lists, both sorted, walked forward together.</div>
+          <div class="session-tags"><span class="tag tag-new">Repeatable</span><span class="tag tag-technique">two pointers · same direction</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+      <a class="session-card" href="lesson_session8_ferris_wheel.html">
+        <div class="session-num status-new">S8</div>
+        <div class="session-content">
+          <div class="session-title">Ferris Wheel</div>
+          <div class="session-desc">Same tool, new direction — one sorted list, pointers starting at opposite ends and closing inward.</div>
+          <div class="session-tags"><span class="tag tag-new">Repeatable</span><span class="tag tag-technique">two pointers · opposite ends</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+      <a class="session-card" href="lesson_session9_sum_of_two_values.html">
+        <div class="session-num status-live">S9</div>
+        <div class="session-content">
+          <div class="session-title">Sum of Two Values</div>
+          <div class="session-desc">Two pointers, closing inward — plus the trap of sorting away the original positions, fixed by pairing (value, position) before you sort.</div>
+          <div class="session-tags"><span class="tag tag-live">Live</span><span class="tag tag-technique">two pointers · position tracking</span></div>
+        </div>
+        <div class="session-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Greedy interval scheduling run (Sessions 10–12)</h2>
+    <p>The newest technique: sort by the right key, then scan through once making a simple greedy decision at each step.</p>
     <div class="session-list">
       <a class="session-card" href="lesson_session10_movie_festival.html">
         <div class="session-num status-new">S10</div>
@@ -168,13 +243,13 @@
     <h2 class="section-title">What's next</h2>
     <div class="box box-blue">
       <div class="box-label">After this run</div>
-      <p>Maximum Subarray Sum (Kadane's algorithm) and Concert Tickets (looking up and removing values from a sorted collection) are good candidates for the next pack — different techniques, picked up once this one feels solid rather than crammed in alongside it.</p>
+      <p>Maximum Subarray Sum (Kadane's algorithm) and Concert Tickets (looking up and removing values from a sorted collection) are good candidates for the next pack — different techniques, picked up once the greedy run feels solid rather than crammed in alongside it.</p>
     </div>
   </div>
 
   <footer class="doc-footer">
     <span>Nick Bystrov — Stage 3 Session Index</span>
-    <span>Sorting and Searching, CSES</span>
+    <span>Introductory Problems + Sorting and Searching, CSES</span>
     <span>Debugging Toolkit applies on every session</span>
   </footer>
 
