@@ -1,33 +1,6 @@
-// Nick CP Tutor — Cloudflare Worker
-//
-// Two endpoints, per the implementation brief Section 3:
-//   POST /evaluate — judge a CSES submission, return a verdict object.
-//   POST /help     — one bounded Socratic reply for a stuck learner.
-//
-// Holds the Anthropic API key server-side as env.ANTHROPIC_API_KEY
-// (set via `wrangler secret put ANTHROPIC_API_KEY`, or pushed automatically
-// by the GitHub Actions deploy workflow — see ../SETUP.md).
-//
-// Still no login, no sessions, no audit-log UI, no governance ceremony —
-// those guardrails stand. One deliberate addition on top of the original
-// "no D1" rule: every completed /evaluate and /help call is now logged as
-// one row in the D1 database bound as env.DB (see the `events` table —
-// created directly with the Cloudflare D1 tool, no migration system). This
-// is data collection for the progress tracker and curriculum-correction
-// review, not an audit trail: one flat table, queried directly when
-// needed, nothing built on top of it. A logging failure never breaks a
-// request to Nick — see logEvent's own try/catch below.
-
-// /evaluate is a fairly mechanical classification task (PASS / SMALL_CORRECTION
-// / REPAIR) and Haiku has been reliable at it through every test. /help is a
-// genuinely more nuanced judgment call (how much a hint reveals) — every
-// recurring issue during testing happened there, not in /evaluate — so it
-// runs on a stronger model instead of trying to prompt-engineer around a
-// faster/cheaper model's limits indefinitely.
-const MODEL_EVALUATE = "claude-haiku-4-5-20251001";
-const MODEL_HELP = "claude-sonnet-5";
-
-const EVALUATE_SYSTEM_PROMPT = `You are the evaluator for a single 11-year-old learning competitive
+var MODEL_EVALUATE = "claude-haiku-4-5-20251001";
+var MODEL_HELP = "claude-sonnet-5";
+var EVALUATE_SYSTEM_PROMPT = `You are the evaluator for a single 11-year-old learning competitive
 programming alone in Python, preparing for USACO Bronze. You judge one
 submission and return one JSON object. You never speak to the child except
 through \`child_message\`; every other field feeds the system.
@@ -40,24 +13,24 @@ HOW TO JUDGE CORRECTNESS
   works by luck or hardcoding, do not pass it. If missing, judge the code
   on its own.
 - Distinguish three failure types, because they need different help:
-    WRONG    — logic is incorrect (wrong output on valid input)
-    TOO_SLOW — logic is correct but would time out at max input size
-    BROKEN   — it crashes or doesn't run
+    WRONG    \u2014 logic is incorrect (wrong output on valid input)
+    TOO_SLOW \u2014 logic is correct but would time out at max input size
+    BROKEN   \u2014 it crashes or doesn't run
 
 CHOOSING THE VERDICT
 - PASS: correct and efficient enough. Any valid method.
 - SMALL_CORRECTION: one clear, self-fixable mistake stands between him and
-  a pass — an off-by-one, a missing sort, a wrong print, one bad branch.
+  a pass \u2014 an off-by-one, a missing sort, a wrong print, one bad branch.
   He can fix it himself with a nudge and resubmit today.
 - REPAIR: the misunderstanding is structural, or the correct-but-slow
   method he used has NOT appeared in \`taught_recently\`. Needs a fresh
   lesson tomorrow, not a same-day nudge.
 - EXCEPTION: if the code is correct but too slow, and the fast method
-  needed IS listed in \`taught_recently\`, treat this as SMALL_CORRECTION —
+  needed IS listed in \`taught_recently\`, treat this as SMALL_CORRECTION \u2014
   he has the tool and just didn't reach for it. Nudge him to remember it.
   Regardless of verdict in this case, set \`flag_for_reinforcement: true\`,
   because passing today with a reminder doesn't prove the technique is
-  solid — it should get a short refresher in the next week's material.
+  solid \u2014 it should get a short refresher in the next week's material.
 
 THE SCALING NOTE (information, never a gate)
 - If the code PASSES but uses a method that won't survive to Silver (e.g. a
@@ -71,15 +44,14 @@ WRITING \`child_message\`
   give the corrected line, the missing line, or "change X to Y." One
   nudge, the smallest that might unstick him. Point at WHERE, not WHAT.
 - For PASS: short, specific praise for what he got right.
-- For REPAIR: one sentence — a fresh lesson is coming tomorrow, being
+- For REPAIR: one sentence \u2014 a fresh lesson is coming tomorrow, being
   stuck here is normal, nothing to fix tonight. Do not teach the idea here.
 - Explain any term the first time you use it. Warm and direct, never
   babyish.
 
 You must answer only by calling the submit_verdict tool with your answer
 in its arguments. Do not write any text outside that tool call.`;
-
-const EVALUATE_TOOL = {
+var EVALUATE_TOOL = {
   name: "submit_verdict",
   description: "Submit the evaluation verdict for a student's competitive programming submission.",
   input_schema: {
@@ -90,7 +62,7 @@ const EVALUATE_TOOL = {
       verdict: { type: "string", enum: ["PASS", "SMALL_CORRECTION", "REPAIR"] },
       failure_type: { type: "string", enum: ["NONE", "WRONG", "TOO_SLOW", "BROKEN"] },
       method_used: { type: "string", description: "approach the code actually took, a few words" },
-      reason_for_system: { type: "string", description: "why this verdict — for the tracker/log, not shown to child" },
+      reason_for_system: { type: "string", description: "why this verdict \u2014 for the tracker/log, not shown to child" },
       child_message: { type: "string", description: "shown directly to Nick" },
       scaling_note: { type: "string", description: "empty unless a passing solution won't scale to Silver" },
       flag_for_reinforcement: { type: "boolean", description: "true if this skill needs a refresher in next week's pack, independent of verdict" },
@@ -98,8 +70,7 @@ const EVALUATE_TOOL = {
     }
   }
 };
-
-const HELP_SYSTEM_PROMPT = `You are the live help assistant for a single 11-year-old learning
+var HELP_SYSTEM_PROMPT = `You are the live help assistant for a single 11-year-old learning
 competitive programming alone in Python, preparing for USACO Bronze. He
 is mid-problem, stuck, and has already tried what he can alone before
 reaching out. You speak to him directly and only through \`reply_to_nick\`;
@@ -143,10 +114,10 @@ HOW TO HINT
 - A yes/no question that names the specific missing technique is just
   as much of a giveaway as a statement, even though it's grammatically
   a question. "Did you sort the \`pairs\` list?" tells him exactly what
-  to add — there's nothing left to work out, only a fact to confirm.
+  to add \u2014 there's nothing left to work out, only a fact to confirm.
   Ask about a piece of STATE or BEHAVIOR he can go check instead of
   naming the technique: not "did you sort it?" but "what does your
-  \`pairs\` list actually look like right when the while loop starts —
+  \`pairs\` list actually look like right when the while loop starts \u2014
   is it in the same order you built it in, or could it have changed?"
   He should still have to connect what he observes to the fix himself.
 - If this is a genuinely new concept he hasn't seen before (not just a
@@ -183,8 +154,7 @@ thing to try. Never a complete explanation handed to him.
 
 You must answer only by calling the submit_help_reply tool with your
 answer in its arguments. Do not write any text outside that tool call.`;
-
-const HELP_TOOL = {
+var HELP_TOOL = {
   name: "submit_help_reply",
   description: "Submit the Socratic help reply for Nick's live /help request.",
   input_schema: {
@@ -193,9 +163,9 @@ const HELP_TOOL = {
     required: ["reply_to_nick", "debugging_stage", "needs_escalation"],
     properties: {
       reply_to_nick: { type: "string", description: "The single message shown directly to Nick. This is the only field he ever sees." },
-      debugging_stage: { type: "string", enum: ["guess", "read_error", "try_fix", "print_statement", "search", "ask_for_help"], description: "Which step of the taught Debugging Toolkit this reply corresponds to — for consistency, not shown to Nick." },
+      debugging_stage: { type: "string", enum: ["guess", "read_error", "try_fix", "print_statement", "search", "ask_for_help"], description: "Which step of the taught Debugging Toolkit this reply corresponds to \u2014 for consistency, not shown to Nick." },
       needs_escalation: { type: "boolean", description: "true if this should end the hint exchange and point Nick to save his file for dad's next weekly pass, rather than continuing to hint." },
-      escalation_reason: { type: "string", description: "empty unless needs_escalation is true — brief internal note on why, not shown to Nick." }
+      escalation_reason: { type: "string", description: "empty unless needs_escalation is true \u2014 brief internal note on why, not shown to Nick." }
     }
   }
 };
@@ -207,21 +177,14 @@ function corsHeaders() {
     "Access-Control-Allow-Headers": "Content-Type"
   };
 }
-
 function jsonResponse(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json", ...corsHeaders() }
   });
 }
-
-// One flat log row per completed /evaluate or /help call. Never throws
-// into the request path — a failed write is logged to console and
-// swallowed, because losing a log row is fine, breaking Nick's session
-// over it is not. Runs via ctx.waitUntil so it never delays the response
-// he's waiting on.
 async function logEvent(env, ctx, row) {
-  if (!env || !env.DB) return; // no D1 binding available — skip silently
+  if (!env || !env.DB) return;
   const insert = env.DB.prepare(
     `INSERT INTO events (
       event_type, problem_id, problem_title, submission, cses_verdict,
@@ -253,34 +216,25 @@ async function logEvent(env, ctx, row) {
     row.raw_envelope ?? null,
     row.raw_response ?? null
   );
-
   const promise = insert.run().catch((err) => {
     console.error("D1 log write failed (non-fatal):", err);
   });
-
   if (ctx && typeof ctx.waitUntil === "function") {
     ctx.waitUntil(promise);
   } else {
     await promise;
   }
 }
-
-// Calls the Anthropic API with a forced tool call. Retries once if the
-// model writes text instead of invoking the tool (observed occasionally
-// with Haiku during testing) before giving up with a clear error — never
-// silently reshapes non-conforming text into something schema-shaped.
 async function callAnthropic(env, model, systemPrompt, tool, envelope) {
   const body = {
-    model: model,
+    model,
     max_tokens: 1000,
     system: systemPrompt,
     messages: [{ role: "user", content: JSON.stringify(envelope, null, 2) }],
     tools: [tool],
     tool_choice: { type: "tool", name: tool.name }
   };
-
   let lastTextSeen = null;
-
   for (let attempt = 1; attempt <= 2; attempt++) {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -291,33 +245,23 @@ async function callAnthropic(env, model, systemPrompt, tool, envelope) {
       },
       body: JSON.stringify(body)
     });
-
     if (!resp.ok) {
       const errText = await resp.text();
       throw new Error(`Anthropic API error ${resp.status}: ${errText}`);
     }
-
     const data = await resp.json();
     const toolUse = (data.content || []).find((b) => b.type === "tool_use");
     if (toolUse) return toolUse.input;
-
     const textBlock = (data.content || []).find((b) => b.type === "text");
     lastTextSeen = textBlock ? textBlock.text : JSON.stringify(data.content);
   }
-
   throw new Error("Model did not call the tool after a retry. Raw text: " + lastTextSeen);
 }
-
-// REPAIR's child_message is specified as one short, reassuring sentence
-// that does NOT diagnose or teach — that's what tomorrow's fresh lesson
-// is for. A long paragraph or a coaching question means the model wrote
-// a /help-style hint instead of a same-day close-out message.
 function repairMessageActuallyTeaches(verdict) {
   if (verdict.verdict !== "REPAIR") return false;
   const msg = (verdict.child_message || "").trim();
   return msg.includes("?") || msg.length > 220;
 }
-
 async function handleEvaluate(request, env, ctx) {
   let envelope;
   try {
@@ -328,18 +272,14 @@ async function handleEvaluate(request, env, ctx) {
   if (!envelope || !envelope.submission || !envelope.problem_id) {
     return jsonResponse({ error: "Missing required fields: problem_id, submission" }, 400);
   }
-
   try {
     let verdict = await callAnthropic(env, MODEL_EVALUATE, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, envelope);
-
     if (repairMessageActuallyTeaches(verdict)) {
       const retryEnvelope = Object.assign({}, envelope, {
-        tutor_self_correction_note:
-          "Your previous child_message for this REPAIR verdict diagnosed the problem and/or asked a question — that teaches, which REPAIR must not do. Rewrite child_message as ONE short, reassuring sentence only: a fresh lesson is coming tomorrow, being stuck here is normal, nothing to fix tonight. No diagnosis, no question."
+        tutor_self_correction_note: "Your previous child_message for this REPAIR verdict diagnosed the problem and/or asked a question \u2014 that teaches, which REPAIR must not do. Rewrite child_message as ONE short, reassuring sentence only: a fresh lesson is coming tomorrow, being stuck here is normal, nothing to fix tonight. No diagnosis, no question."
       });
       verdict = await callAnthropic(env, MODEL_EVALUATE, EVALUATE_SYSTEM_PROMPT, EVALUATE_TOOL, retryEnvelope);
     }
-
     await logEvent(env, ctx, {
       event_type: "evaluate",
       problem_id: envelope.problem_id,
@@ -357,20 +297,12 @@ async function handleEvaluate(request, env, ctx) {
       raw_envelope: JSON.stringify(envelope),
       raw_response: JSON.stringify(verdict)
     });
-
     return jsonResponse(verdict);
   } catch (err) {
     console.error("evaluate error:", err);
     return jsonResponse({ error: err.message || String(err) }, 502);
   }
 }
-
-// Heuristic, not a parser: a genuine question-first reply has its first
-// '?' with no completed sentence (". " or "! ") appearing before it —
-// regardless of overall length. Character-count alone isn't reliable:
-// a short "explain, then ask" reply can still fit its '?' within an
-// arbitrary early cutoff. Checking for a completed clause before the
-// question mark catches the actual pattern instead of just its length.
 function opensWithQuestion(text) {
   if (!text) return false;
   const trimmed = text.trim();
@@ -379,15 +311,6 @@ function opensWithQuestion(text) {
   const before = trimmed.slice(0, qIndex);
   return !/[.!]\s/.test(before);
 }
-
-// A second, different failure mode: the reply DOES open with a
-// question, but it's a closed yes/no question naming the fix directly
-// ("did you sort the list?") rather than asking him to go observe
-// something. Not tied to "sort" specifically, so this generalizes to
-// future problems' hints too — it's about question SHAPE (closed
-// yes/no), not the specific technique being taught. Checked anywhere
-// before the first '?', not just at the very start of the clause, so a
-// short interjection ("Hmm — did you sort it?") doesn't slip through.
 function isLeadingYesNoQuestion(text) {
   if (!text) return false;
   const trimmed = text.trim();
@@ -396,7 +319,6 @@ function isLeadingYesNoQuestion(text) {
   const before = trimmed.slice(0, qIndex);
   return /\b(did|do|does|have|has|is|are|was|were)\s+you\b/i.test(before);
 }
-
 async function handleHelp(request, env, ctx) {
   let envelope;
   try {
@@ -407,23 +329,14 @@ async function handleHelp(request, env, ctx) {
   if (!envelope || !envelope.current_code || !envelope.nick_message) {
     return jsonResponse({ error: "Missing required fields: current_code, nick_message" }, 400);
   }
-
   try {
     let reply = await callAnthropic(env, MODEL_HELP, HELP_SYSTEM_PROMPT, HELP_TOOL, envelope);
-
     if (!opensWithQuestion(reply.reply_to_nick) || isLeadingYesNoQuestion(reply.reply_to_nick)) {
-      // Prompt wording alone hasn't reliably prevented "explain, then
-      // ask" replies during testing, nor "ask a yes/no question that
-      // names the fix directly" replies. Rather than ship one we can
-      // already tell violates the rules, retry once with explicit
-      // feedback about what to fix.
       const retryEnvelope = Object.assign({}, envelope, {
-        tutor_self_correction_note:
-          "Your previous attempt either explained the situation before asking anything, or asked a yes/no question that names the specific missing technique directly (like 'did you sort the list?') — both give too much away. Rewrite reply_to_nick as ONE open question about what the code currently does or what a specific piece of state looks like, with no explanation first and no naming the fix. See the WRONG SHAPE / RIGHT SHAPE examples in your instructions."
+        tutor_self_correction_note: "Your previous attempt either explained the situation before asking anything, or asked a yes/no question that names the specific missing technique directly (like 'did you sort the list?') \u2014 both give too much away. Rewrite reply_to_nick as ONE open question about what the code currently does or what a specific piece of state looks like, with no explanation first and no naming the fix. See the WRONG SHAPE / RIGHT SHAPE examples in your instructions."
       });
       reply = await callAnthropic(env, MODEL_HELP, HELP_SYSTEM_PROMPT, HELP_TOOL, retryEnvelope);
     }
-
     await logEvent(env, ctx, {
       event_type: "help",
       problem_id: envelope.problem_id,
@@ -437,7 +350,6 @@ async function handleHelp(request, env, ctx) {
       raw_envelope: JSON.stringify(envelope),
       raw_response: JSON.stringify(reply)
     });
-
     return jsonResponse(reply);
   } catch (err) {
     console.error("help error:", err);
@@ -445,22 +357,326 @@ async function handleHelp(request, env, ctx) {
   }
 }
 
-export default {
+// ---------------------------------------------------------------------
+// PARENT REPORT (added: standalone, unlisted, read-only dashboard)
+// ---------------------------------------------------------------------
+
+// Unlisted-URL secret. This is NOT a login system -- knowledge of this
+// exact path segment is the only gate. Change this string and redeploy
+// any time the link needs to be rotated.
+var REPORT_TOKEN = "5c586e0a9cf68d34cd91d3d3";
+
+// Mirrors the curriculum order in the tracker. Update this array when a
+// new session is added -- it is the only thing that needs to change here.
+var CURRICULUM = [
+  { n: 1, problem_id: "cses-1068", title: "Weird Algorithm" },
+  { n: 2, problem_id: "cses-1083", title: "Missing Number" },
+  { n: 3, problem_id: "cses-1069", title: "Repetitions" },
+  { n: 4, problem_id: "cses-1621", title: "Distinct Numbers" },
+  { n: 5, problem_id: "cses-1754", title: "Coin Piles" },
+  { n: 6, problem_id: "cses-1617", title: "Bit Strings" },
+  { n: 7, problem_id: "cses-1084", title: "Apartments" },
+  { n: 8, problem_id: "cses-1090", title: "Ferris Wheel" },
+  { n: 9, problem_id: "cses-1640", title: "Sum of Two Values" },
+  { n: 10, problem_id: "cses-1629", title: "Movie Festival" },
+  { n: 11, problem_id: "cses-1632", title: "Movie Festival II" },
+  { n: 12, problem_id: "cses-1619", title: "Restaurant Customers" }
+];
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function parseTs(ts) {
+  if (!ts) return null;
+  // D1's datetime('now') default is "YYYY-MM-DD HH:MM:SS" in UTC.
+  const iso = ts.includes("T") ? ts : ts.replace(" ", "T") + "Z";
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatSpan(firstDate, lastDate) {
+  if (!firstDate || !lastDate) return null;
+  const ms = lastDate.getTime() - firstDate.getTime();
+  if (ms < 60000) return "under a minute";
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return mins + " minute" + (mins === 1 ? "" : "s");
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return hours + " hour" + (hours === 1 ? "" : "s") + " (spread across the session)";
+  const days = Math.round(hours / 24);
+  return days + " day" + (days === 1 ? "" : "s") + " (came back to it later)";
+}
+
+function formatWhen(date) {
+  if (!date) return "no activity yet";
+  return date.toLocaleString("en-US", {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+  });
+}
+
+async function fetchParentReportData(env) {
+  const evalRes = await env.DB.prepare(
+    `SELECT problem_id, ts, verdict, flag_for_reinforcement
+     FROM events WHERE event_type = 'evaluate' ORDER BY ts ASC`
+  ).all();
+  const helpRes = await env.DB.prepare(
+    `SELECT problem_id, ts, needs_escalation
+     FROM events WHERE event_type = 'help' ORDER BY ts ASC`
+  ).all();
+
+  const perProblem = {};
+  const getRow = (pid) => {
+    if (!perProblem[pid]) {
+      perProblem[pid] = {
+        attempts: 0, firstDate: null, lastDate: null,
+        latestVerdict: null, latestFlag: 0, escalated: false
+      };
+    }
+    return perProblem[pid];
+  };
+
+  for (const row of evalRes.results || []) {
+    const p = getRow(row.problem_id);
+    const d = parseTs(row.ts);
+    p.attempts += 1;
+    if (d && (!p.firstDate || d < p.firstDate)) p.firstDate = d;
+    if (d && (!p.lastDate || d >= p.lastDate)) p.lastDate = d;
+    // rows are ascending by ts, so the last one we see is the most recent
+    p.latestVerdict = row.verdict;
+    p.latestFlag = row.flag_for_reinforcement === 1 ? 1 : 0;
+  }
+  for (const row of helpRes.results || []) {
+    const p = getRow(row.problem_id);
+    if (row.needs_escalation === 1) p.escalated = true;
+  }
+
+  let sessionsPassed = 0;
+  let totalAttempts = 0;
+  let activeRedFlags = 0;
+  let lastActivityOverall = null;
+
+  const sessions = CURRICULUM.map((session) => {
+    const stats = perProblem[session.problem_id];
+    if (!stats || stats.attempts === 0) {
+      return {
+        ...session, status: "not_started", attempts: 0,
+        span: null, lastSeen: null, redFlag: false
+      };
+    }
+    totalAttempts += stats.attempts;
+    const redFlag = stats.latestVerdict === "REPAIR" || stats.escalated || stats.latestFlag === 1;
+    if (redFlag) activeRedFlags += 1;
+    const status = stats.latestVerdict === "PASS" ? "passed" : "in_progress";
+    if (status === "passed") sessionsPassed += 1;
+    if (stats.lastDate && (!lastActivityOverall || stats.lastDate > lastActivityOverall)) {
+      lastActivityOverall = stats.lastDate;
+    }
+    return {
+      ...session, status, attempts: stats.attempts,
+      span: formatSpan(stats.firstDate, stats.lastDate),
+      lastSeen: stats.lastDate, redFlag
+    };
+  });
+
+  return {
+    sessions,
+    summary: {
+      sessionsPassed, totalSessions: CURRICULUM.length,
+      totalAttempts, activeRedFlags, lastActivityOverall
+    }
+  };
+}
+
+function statusBadge(session) {
+  if (session.redFlag) return `<span class="badge badge-flag">NEEDS A LOOK</span>`;
+  if (session.status === "passed") return `<span class="badge badge-pass">PASSED</span>`;
+  if (session.status === "in_progress") return `<span class="badge badge-progress">IN PROGRESS</span>`;
+  return `<span class="badge badge-none">NOT STARTED</span>`;
+}
+
+function renderSessionCard(session) {
+  const meta = [];
+  if (session.attempts > 0) {
+    meta.push(`${session.attempts} attempt${session.attempts === 1 ? "" : "s"}`);
+  }
+  if (session.span) meta.push(`took ${session.span}`);
+  if (session.lastSeen) meta.push(`last activity ${escapeHtml(formatWhen(session.lastSeen))}`);
+  const metaLine = meta.length
+    ? `<div class="card-meta">${escapeHtml(meta.join(" \u00b7 "))}</div>`
+    : `<div class="card-meta card-meta-empty">No submissions yet</div>`;
+
+  return `
+  <div class="card ${session.redFlag ? "card-flag" : ""}">
+    <div class="card-top">
+      <div class="card-title">
+        <span class="card-num">Session ${session.n}</span>
+        <span class="card-name">${escapeHtml(session.title)}</span>
+      </div>
+      ${statusBadge(session)}
+    </div>
+    ${metaLine}
+  </div>`;
+}
+
+function renderParentReportHtml(data) {
+  const { sessions, summary } = data;
+  const flagLine = summary.activeRedFlags > 0
+    ? `<div class="summary-flag">${summary.activeRedFlags} session${summary.activeRedFlags === 1 ? "" : "s"} flagged \u2014 see below</div>`
+    : `<div class="summary-ok">No flags right now</div>`;
+
+  const cardsHtml = sessions.map(renderSessionCard).join("\n");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Nick \u2014 CP Progress Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF8; --ink: #1F1D1A; --text-muted: #6B665D; --border: #E4E0D8;
+    --surface: #FFFFFF; --surface-alt: #F1EFE9;
+    --green: #2F8F4E; --green-light: #EAF6EE; --green-border: #BFE3CB;
+    --blue: #2E6FB0; --blue-light: #EAF2FA; --blue-border: #BFD8EF;
+    --red: #B23A3A; --red-light: #FBECEC; --red-border: #EAC0C0;
+    --gray: #8A8579; --gray-light: #F1EFE9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 60px; background: var(--bg); color: var(--ink);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.55;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 {
+    font-family: 'Libre Baskerville', serif; font-size: 1.7rem; font-weight: 700;
+    margin: 0 0 4px;
+  }
+  .subtitle { color: var(--text-muted); font-size: 13.5px; margin-bottom: 28px; }
+  .summary {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 22px; margin-bottom: 28px;
+  }
+  .summary-row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 10px; }
+  .summary-row:last-child { margin-bottom: 0; }
+  .stat { min-width: 120px; }
+  .stat-num { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 700; }
+  .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .summary-flag { color: var(--red); font-weight: 600; font-size: 14px; }
+  .summary-ok { color: var(--green); font-weight: 600; font-size: 14px; }
+  .cards { display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--gray);
+    border-radius: 8px; padding: 14px 18px;
+  }
+  .card-flag { border-left-color: var(--red); background: var(--red-light); }
+  .card-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .card-title { display: flex; flex-direction: column; }
+  .card-num { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .card-name { font-family: 'Libre Baskerville', serif; font-size: 1.05rem; font-weight: 700; }
+  .card-meta { font-size: 13px; color: var(--text-muted); margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+  .card-meta-empty { font-style: italic; }
+  .badge {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 4px 10px;
+    border-radius: 20px; white-space: nowrap;
+  }
+  .badge-pass { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-progress { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
+  .badge-flag { background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); }
+  .badge-none { background: var(--gray-light); color: var(--gray); border: 1px solid var(--border); }
+  .footer-note { margin-top: 28px; font-size: 12.5px; color: var(--text-muted); }
+  @media print {
+    body { background: #fff; color: #000; }
+    .card, .summary { border-color: #999; background: #fff; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Nick's CP Progress</h1>
+    <div class="subtitle">CSES handle: CaptainNickel \u00b7 Stage 3 \u2014 Sorting and Searching \u00b7 generated ${escapeHtml(formatWhen(new Date()))}</div>
+
+    <div class="summary">
+      <div class="summary-row">
+        <div class="stat">
+          <div class="stat-num">${summary.sessionsPassed} / ${summary.totalSessions}</div>
+          <div class="stat-label">Sessions passed</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">${summary.totalAttempts}</div>
+          <div class="stat-label">Total attempts logged</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">${escapeHtml(formatWhen(summary.lastActivityOverall))}</div>
+          <div class="stat-label">Last activity</div>
+        </div>
+      </div>
+      <div class="summary-row">
+        ${flagLine}
+      </div>
+    </div>
+
+    <div class="cards">
+      ${cardsHtml}
+    </div>
+
+    <div class="footer-note">
+      "Needs a look" means the last thing logged for that session was a REPAIR verdict,
+      an escalated help request, or a flagged reinforcement note \u2014 not necessarily
+      that anything is wrong right now. Time-on-task is the gap between the first and
+      last logged attempt on a session, so it can include breaks, not just focused time.
+      This page updates live from the same log the tutor writes to \u2014 refresh anytime.
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+async function handleParentReport(request, env, ctx, token) {
+  if (token !== REPORT_TOKEN) {
+    return jsonResponse({ error: "Not found." }, 404);
+  }
+  try {
+    const data = await fetchParentReportData(env);
+    const html = renderParentReportHtml(data);
+    return new Response(html, {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=UTF-8" }
+    });
+  } catch (err) {
+    console.error("parent-report error:", err);
+    return jsonResponse({ error: err.message || String(err) }, 502);
+  }
+}
+
+var index_default = {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders() });
     }
-
     const url = new URL(request.url);
 
     if (request.method === "POST" && url.pathname === "/evaluate") {
       return handleEvaluate(request, env, ctx);
     }
-
     if (request.method === "POST" && url.pathname === "/help") {
       return handleHelp(request, env, ctx);
+    }
+    if (request.method === "GET" && url.pathname.startsWith("/parent-report/")) {
+      const token = url.pathname.slice("/parent-report/".length);
+      return handleParentReport(request, env, ctx, token);
     }
 
     return jsonResponse({ error: "Not found. Use POST /evaluate or POST /help." }, 404);
   }
 };
+
+export default index_default;
