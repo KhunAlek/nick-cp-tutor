@@ -130,12 +130,17 @@
   .attempt-count { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
 
   .result-card { margin-top: 16px; padding: 14px 16px; border-radius: 6px; border: 1px solid var(--border); }
-  .result-PASS { background: var(--green-light); border-color: var(--green-border); }
   .result-SMALL_CORRECTION { background: var(--blue-light); border-color: var(--blue-border); }
   .result-REPAIR { background: var(--red-light); border-color: var(--red-border); }
   .result-pill { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; margin-bottom: 8px; background: rgba(0,0,0,0.06); }
   .result-message { font-size: 16px; }
   .scaling-note { margin-top: 10px; font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+  .result-PASS { background: var(--green-light); border: 2px solid var(--green); border-radius: 12px; padding: 22px 24px; box-shadow: 0 4px 16px rgba(58, 138, 74, 0.16); animation: pass-pop 0.4s ease-out; }
+  .result-PASS .result-pill { background: var(--green); color: #FFF; font-size: 13px; padding: 5px 14px; display: flex; align-items: center; gap: 6px; width: fit-content; }
+  .result-PASS .result-message { font-size: 17px; font-weight: 600; color: var(--ink); }
+  @keyframes pass-pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .result-PASS { animation: none; } }
 
   .chat-log { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; max-height: 340px; overflow-y: auto; }
   .chat-bubble { padding: 10px 14px; border-radius: 8px; font-size: 14px; max-width: 88%; }
@@ -751,9 +756,12 @@ function renderAttemptCount() {
 
 function renderEvaluateResult(verdict) {
   const el = document.getElementById('evaluateResult');
+  const pillLabel = verdict.verdict === 'PASS'
+    ? '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.2 11.7L13 4.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> PASS'
+    : escapeHtml(verdict.verdict);
   el.innerHTML = `
     <div class="result-card result-${verdict.verdict}">
-      <span class="result-pill">${escapeHtml(verdict.verdict)}</span>
+      <span class="result-pill">${pillLabel}</span>
       <div class="result-message">${escapeHtml(verdict.child_message)}</div>
       ${verdict.scaling_note ? `<div class="scaling-note">${escapeHtml(verdict.scaling_note)}</div>` : ''}
     </div>

@@ -29,7 +29,7 @@
     --red-border: #E9C1B4;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-body); font-size: 16px; line-height: 1.7; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-body); font-size: 18px; line-height: 1.7; }
   .page { max-width: 760px; margin: 0 auto; padding: 48px 28px 100px; }
   h1, h2, h3 { font-family: 'Libre Baskerville', serif; color: var(--ink); font-weight: 700; }
   code, .mono { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
@@ -54,29 +54,29 @@
   p:last-child { margin-bottom: 0; }
   strong { color: var(--ink); }
 
-  .box { border-radius: 8px; padding: 16px 20px; margin: 18px 0; font-size: 15px; }
-  .box-blue { background: var(--blue-light); border: 1px solid var(--blue-border); border-left: 4px solid var(--blue); }
+  .box { border-radius: 8px; padding: 16px 20px; margin: 18px 0; font-size: 17px; }
+  .box-blue { background: var(--surface-alt); border: 1px solid var(--border); border-left: 4px solid var(--text-muted); }
   .box-green { background: var(--green-light); border: 1px solid var(--green-border); border-left: 4px solid var(--green); }
-  .box-purple { background: var(--purple-light); border: 1px solid var(--purple-border); border-left: 4px solid var(--purple); }
+  .box-purple { background: var(--surface-alt); border: 1px solid var(--border); border-left: 4px solid var(--text-muted); }
   .box-plain { background: var(--surface-alt); border: 1px solid var(--border); border-left: 4px solid var(--text-muted); }
   .box-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
-  .box-blue .box-label { color: var(--blue); }
+  .box-blue .box-label { color: var(--text-muted); }
   .box-green .box-label { color: var(--green); }
-  .box-purple .box-label { color: var(--purple); }
+  .box-purple .box-label { color: var(--text-muted); }
   .box-plain .box-label { color: var(--text-muted); }
 
   .diagram-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
   .diagram-caption { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
 
   .checklist { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
-  .check-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
+  .check-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 16px; }
   .check-box { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
 
   .step-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0; background: var(--surface); }
   .step-row { display: flex; border-bottom: 1px solid var(--border); }
   .step-row:last-child { border-bottom: none; }
   .step-num { width: 44px; flex-shrink: 0; background: var(--surface-alt); display: flex; align-items: flex-start; justify-content: center; padding-top: 14px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-muted); border-right: 1px solid var(--border); }
-  .step-text { padding: 14px 18px; font-size: 14px; line-height: 1.6; }
+  .step-text { padding: 14px 18px; font-size: 16px; line-height: 1.6; }
 
   .code-compare { display: flex; gap: 14px; margin: 18px 0; flex-wrap: wrap; flex-direction: column; }
   .code-block { flex: 1 1 100%; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
@@ -88,15 +88,15 @@
   /* --- Step 4 additions: hint ladder, common mistakes, advance rule --- */
   .hint-ladder { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
   .hint-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-  .hint-item summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; color: var(--ink); list-style: none; }
+  .hint-item summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 16px; color: var(--ink); list-style: none; }
   .hint-item summary::-webkit-details-marker { display: none; }
   .hint-item summary::before { content: "▸  "; color: var(--text-muted); }
   .hint-item[open] summary::before { content: "▾  "; }
   .hint-item[open] summary { border-bottom: 1px solid var(--border); background: var(--surface-alt); }
-  .hint-body { padding: 12px 16px; font-size: 14px; line-height: 1.6; }
+  .hint-body { padding: 12px 16px; font-size: 16px; line-height: 1.6; }
 
   .mistake-list { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
-  .mistake-item { display: flex; gap: 10px; align-items: flex-start; background: var(--red-light); border: 1px solid var(--red-border); border-radius: 6px; padding: 12px 16px; font-size: 14px; }
+  .mistake-item { display: flex; gap: 10px; align-items: flex-start; background: var(--red-light); border: 1px solid var(--red-border); border-radius: 6px; padding: 12px 16px; font-size: 16px; }
   .mistake-icon { flex-shrink: 0; color: var(--red); font-weight: 700; }
 
   .advance-rule { background: var(--green-light); border: 1px solid var(--green-border); border-radius: 8px; padding: 18px 22px; margin: 20px 0; }
@@ -110,29 +110,39 @@
 
   /* --- interactive additions (Step 3) --- */
   .mode-banner { font-size: 12.5px; font-weight: 600; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; }
-  .mode-test { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
+  .mode-test { background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--border); }
   .mode-live { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
 
   .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 16px 0; }
+  .panel-interactive { background: var(--blue-light); border: 1px solid var(--blue-border); }
   .panel label { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
   .panel textarea { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #22201C; color: #F1EFEA; border: none; border-radius: 6px; padding: 12px 14px; resize: vertical; margin-bottom: 14px; }
   .panel select, .panel input[type=text] { width: 100%; font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 5px; margin-bottom: 14px; background: var(--surface); color: var(--text-body); }
   .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
   .row > div { flex: 1; min-width: 180px; }
 
-  button.action-btn { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 14px; background: var(--ink); color: #FFF; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+  button.action-btn { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 14px; background: var(--ink); color: #FFF; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 14px; }
   button.action-btn:hover { background: #000; }
   button.action-btn:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+  .optional-field { margin-top: 20px; padding-top: 14px; border-top: 1px dashed var(--border); }
+  .optional-field label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+  .optional-field select { width: auto; min-width: 220px; font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-body); }
 
   .attempt-count { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
 
   .result-card { margin-top: 16px; padding: 14px 16px; border-radius: 6px; border: 1px solid var(--border); }
-  .result-PASS { background: var(--green-light); border-color: var(--green-border); }
   .result-SMALL_CORRECTION { background: var(--blue-light); border-color: var(--blue-border); }
   .result-REPAIR { background: var(--red-light); border-color: var(--red-border); }
   .result-pill { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; margin-bottom: 8px; background: rgba(0,0,0,0.06); }
-  .result-message { font-size: 14.5px; }
+  .result-message { font-size: 16px; }
   .scaling-note { margin-top: 10px; font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+  .result-PASS { background: var(--green-light); border: 2px solid var(--green); border-radius: 12px; padding: 22px 24px; box-shadow: 0 4px 16px rgba(58, 138, 74, 0.16); animation: pass-pop 0.4s ease-out; }
+  .result-PASS .result-pill { background: var(--green); color: #FFF; font-size: 13px; padding: 5px 14px; display: flex; align-items: center; gap: 6px; width: fit-content; }
+  .result-PASS .result-message { font-size: 17px; font-weight: 600; color: var(--ink); }
+  @keyframes pass-pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .result-PASS { animation: none; } }
 
   .chat-log { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; max-height: 340px; overflow-y: auto; }
   .chat-bubble { padding: 10px 14px; border-radius: 8px; font-size: 14px; max-width: 88%; }
@@ -348,25 +358,22 @@ leaves.sort()      # lists instead of one combined events list
 
     <div id="modeBanner" class="mode-banner mode-test">Loading…</div>
 
-    <div class="panel">
+    <div class="panel panel-interactive">
       <label for="codeInput">Your code</label>
       <textarea id="codeInput" rows="12" spellcheck="false" placeholder="Paste your Python code here…"></textarea>
 
-      <div class="row">
-        <div>
-          <label for="csesVerdictInput">What did CSES say? (optional)</label>
-          <select id="csesVerdictInput">
-            <option value="">Haven't submitted yet</option>
-            <option value="ACCEPTED">ACCEPTED</option>
-            <option value="WRONG ANSWER">WRONG ANSWER</option>
-            <option value="TIME LIMIT EXCEEDED">TIME LIMIT EXCEEDED</option>
-            <option value="RUNTIME ERROR">RUNTIME ERROR</option>
-            <option value="COMPILE ERROR">COMPILE ERROR</option>
-          </select>
-        </div>
-        <div>
-          <button class="action-btn" id="checkBtn">Check my code</button>
-        </div>
+      <button class="action-btn" id="checkBtn">Check my code</button>
+
+      <div class="optional-field">
+        <label for="csesVerdictInput">Optional — already submitted to CSES? What did it say?</label>
+        <select id="csesVerdictInput">
+          <option value="">Haven't submitted yet</option>
+          <option value="ACCEPTED">ACCEPTED</option>
+          <option value="WRONG ANSWER">WRONG ANSWER</option>
+          <option value="TIME LIMIT EXCEEDED">TIME LIMIT EXCEEDED</option>
+          <option value="RUNTIME ERROR">RUNTIME ERROR</option>
+          <option value="COMPILE ERROR">COMPILE ERROR</option>
+        </select>
       </div>
 
       <div class="attempt-count" id="attemptCount"></div>
@@ -382,7 +389,7 @@ leaves.sort()      # lists instead of one combined events list
       <p>If your best count looks one too high, build a tiny test by hand where someone leaves at the exact same time someone else arrives, and print <code>count</code> at every step. Watch whether it goes up before it goes down at that shared timestamp — it should go down first.</p>
     </div>
 
-    <div class="panel">
+    <div class="panel panel-interactive">
       <label for="chatLog">Conversation</label>
       <div class="chat-log" id="chatLog"></div>
 
@@ -797,9 +804,12 @@ function renderAttemptCount() {
 
 function renderEvaluateResult(verdict) {
   const el = document.getElementById('evaluateResult');
+  const pillLabel = verdict.verdict === 'PASS'
+    ? '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.2 11.7L13 4.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> PASS'
+    : escapeHtml(verdict.verdict);
   el.innerHTML = `
     <div class="result-card result-${verdict.verdict}">
-      <span class="result-pill">${escapeHtml(verdict.verdict)}</span>
+      <span class="result-pill">${pillLabel}</span>
       <div class="result-message">${escapeHtml(verdict.child_message)}</div>
       ${verdict.scaling_note ? `<div class="scaling-note">${escapeHtml(verdict.scaling_note)}</div>` : ''}
     </div>
